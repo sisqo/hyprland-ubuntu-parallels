@@ -40,7 +40,7 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + L | Lock screen (hyprlock) |
 | `mainMod` + X | Power menu (wlogout) |
 | `mainMod` + Shift + V | Clipboard history picker (cliphist + rofi) — see [clipboard.md](clipboard.md) |
-| `mainMod` + B | Wallpaper picker (waypaper, hyprpaper backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) |
+| `mainMod` + B | Wallpaper picker (waypaper, swww backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) and [wallpaper.md](wallpaper.md) |
 | Print | Screenshot a region (grim+slurp) to clipboard |
 | Shift + Print | Screenshot the full screen to clipboard |
 | `mainMod` + arrows | Move focus between windows |

@@ -27,6 +27,7 @@ file, line, or verifiable command.
 - [docs/shortcuts.md](docs/shortcuts.md) — keybindings, why `mainMod` is ALT and not SUPER
 - [docs/clipboard.md](docs/clipboard.md) — host↔VM copy/paste and in-session clipboard history
 - [docs/waybar.md](docs/waybar.md) — top bar modules, layout, and styling
+- [docs/wallpaper.md](docs/wallpaper.md) — hyprpaper → swww migration, build-from-source install, curated wallpaper set
 - [docs/config-gotchas.md](docs/config-gotchas.md) — config syntax that changed across versions and silently broke something
 
 All notes reference specific package versions: if you upgrade a component and

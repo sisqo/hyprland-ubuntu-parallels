@@ -40,6 +40,7 @@ for the problem this causes.
 | wofi | 1.4.1-1build2 | Ubuntu repo (installed, unused — see [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi)) |
 | wlogout | 1.1.1-3build2 | Ubuntu repo |
 | waypaper | 2.8 | pipx (`~/.local/share/pipx/venvs/waypaper`), not apt — see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) |
+| swww / swww-daemon | 0.11.2 | built from source via `cargo install --git` (`~/.cargo/bin`), not apt or crates.io — see [wallpaper.md](wallpaper.md#install-built-from-source-not-packaged) |
 | cliphist | 0.4.0-2ubuntu0.3 | Ubuntu repo |
 | wl-clipboard | 2.2.1-1build1 | Ubuntu repo |
 | grim | 1.4.0+ds-2build2 | Ubuntu repo |
@@ -79,6 +80,16 @@ installed alongside its themes. See
 [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi). Iosevka is
 the one actually in use, as the font the active rofi launcher style
 expects.
+
+## Rust toolchain (rustup)
+
+Installed to build `swww` from source (see
+[wallpaper.md](wallpaper.md#install-built-from-source-not-packaged)) —
+Ubuntu 24.04's packaged `rustc`/`cargo` are 1.75.0, older than that crate
+requires. Installed via [rustup](https://rustup.rs) (`~/.cargo`,
+`~/.rustup`), not apt, so `~/.cargo/bin` needs the same "not on Hyprland's
+exec PATH" treatment as any other non-apt binary — see
+[config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec).
 
 ## Parallels Tools
 
