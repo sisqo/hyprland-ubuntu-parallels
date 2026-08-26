@@ -28,13 +28,13 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + Shift + M | Exit the whole session (extra Shift on purpose, so it can't fire by accident) |
 | `mainMod` + E | Open Nautilus (file manager) |
 | `mainMod` + V | Toggle floating |
-| `mainMod` + R | App launcher (wofi drun) |
+| `mainMod` + R | App launcher (rofi, `drun` mode) |
 | `mainMod` + P | Pseudotile |
 | `mainMod` + J | Toggle split direction |
 | `mainMod` + F | Fullscreen |
 | `mainMod` + L | Lock screen (hyprlock) |
 | `mainMod` + X | Power menu (wlogout) |
-| `mainMod` + Shift + V | Clipboard history picker (cliphist + wofi) — see [clipboard.md](clipboard.md) |
+| `mainMod` + Shift + V | Clipboard history picker (cliphist + rofi) — see [clipboard.md](clipboard.md) |
 | `mainMod` + B | Wallpaper picker (waypaper, hyprpaper backend) |
 | Print | Screenshot a region (grim+slurp) to clipboard |
 | Shift + Print | Screenshot the full screen to clipboard |
@@ -44,6 +44,29 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + left-click drag | Move window |
 | `mainMod` + right-click drag | Resize window |
 | Super + Space | Toggle keyboard layout (it ↔ us) |
+
+## Launcher and clipboard picker (rofi)
+
+Both `mainMod`+R and `mainMod`+Shift+V go through `rofi`, configured in
+`~/.config/rofi/config.rasi`:
+
+```
+configuration {
+	modes: "drun,run,window";
+	show-icons: true;
+	icon-theme: "Adwaita";
+	drun-display-format: "{name}";
+	font: "sans 11";
+}
+
+@theme "/usr/share/rofi/themes/Arc-Dark.rasi"
+```
+
+`drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
+cliphist list) are both covered by this one config. `wofi` is still
+installed (`1.4.1-1build2`) but nothing in `hyprland.conf` calls it anymore —
+it's an unused leftover from before the switch to rofi, not a fallback in
+active use.
 
 ## Keyboard layout toggle: why Super+Space and not Alt+Shift
 

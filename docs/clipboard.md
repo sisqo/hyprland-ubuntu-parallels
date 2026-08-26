@@ -61,8 +61,11 @@ exec-once = wl-paste --type image --watch cliphist store
 entry back onto the live clipboard:
 
 ```
-bind = $mainMod SHIFT, V, exec, cliphist list | wofi --dmenu | cliphist decode | wl-copy
+bind = $mainMod SHIFT, V, exec, cliphist list | rofi -dmenu | cliphist decode | wl-copy
 ```
+
+(the picker is `rofi`, not `wofi` — see
+[shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi))
 
 This is a history browser, not "the" clipboard — it doesn't replace normal
 copy/paste, it lets you reach back further than the single most recent

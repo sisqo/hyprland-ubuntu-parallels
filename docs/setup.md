@@ -36,7 +36,8 @@ for the problem this causes.
 | hyprpolkitagent | 0.1.3-1ppa3 | cppiber PPA |
 | waybar | 0.9.24-1build3 | Ubuntu repo (noble) |
 | mako-notifier | 1.8.0-2build2 | Ubuntu repo |
-| wofi | 1.4.1-1build2 | Ubuntu repo |
+| rofi | 1.7.5-0.1build2 | Ubuntu repo |
+| wofi | 1.4.1-1build2 | Ubuntu repo (installed, unused — see [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi)) |
 | wlogout | 1.1.1-3build2 | Ubuntu repo |
 | cliphist | 0.4.0-2ubuntu0.3 | Ubuntu repo |
 | wl-clipboard | 2.2.1-1build1 | Ubuntu repo |
