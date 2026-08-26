@@ -1,5 +1,10 @@
 # Shortcuts
 
+This table can drift from the live config over time. For the current,
+authoritative list straight from `hyprland.conf`, click the keyboard icon
+in the top bar (`custom/shortcuts` — see [waybar.md](waybar.md)), which runs
+`~/.config/hypr/scripts/shortcuts.sh`.
+
 ## `mainMod` is ALT (Option), not SUPER
 
 If you know Hyprland's usual cheatsheets, expect Super — this config

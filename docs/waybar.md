@@ -13,7 +13,7 @@ wrapper script instead of directly, see
 |---|---|
 | Left | `hyprland/workspaces` (click to switch), `hyprland/submap` |
 | Center | `hyprland/window` — focused window title, truncated at 60 chars, per-output |
-| Right | `idle_inhibitor`, `cpu`, `memory`, `disk`, `pulseaudio`, `network`, `clock`, `tray`, `custom/power` |
+| Right | `idle_inhibitor`, `cpu`, `memory`, `disk`, `pulseaudio`, `network`, `clock`, `tray`, `custom/shortcuts`, `custom/power` |
 
 ## Notable module settings
 
@@ -26,6 +26,12 @@ wrapper script instead of directly, see
 - **pulseaudio**: click toggles mute via `wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle`.
 - **network**: shows `essid` + signal for Wi-Fi, `ipaddr` for ethernet,
   `offline` when disconnected.
+- **custom/shortcuts**: click runs `~/.config/hypr/scripts/shortcuts.sh`,
+  which parses every `bind`/`bindm` line straight out of
+  `~/.config/hypr/hyprland.conf` (substituting `$mainMod`) and shows them in
+  a `rofi -dmenu` list. This is a live view generated from the actual config,
+  not a copy — if it and [shortcuts.md](shortcuts.md) ever disagree, the
+  script (and the config it reads) is the source of truth.
 - **custom/power**: click runs `wlogout -b 4` — same power menu as
   `mainMod`+X (see [shortcuts.md](shortcuts.md)).
 
@@ -34,6 +40,7 @@ wrapper script instead of directly, see
 Colors match the Tokyo Night palette used across the rest of the setup
 (`hyprland.conf` borders, `mako` notifications, `hyprlock`): background
 `#1a1b26` at 92% opacity, accent `#7aa2f7`, text `#c0caf5`/`#a9b1d6`, warning
-`#e0af68`, error/critical `#f7768e`. Active workspace pill and hover states
+`#e0af68`, error/critical `#f7768e`, `custom/shortcuts` in green `#9ece6a`
+(hover `#b9f27c`). Active workspace pill and hover states
 use rounded corners (6px) against an otherwise square, borderless bar
 (`border-radius: 0` on `*`).
