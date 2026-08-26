@@ -172,6 +172,64 @@ itself refuses to start) instead of silently no-op'ing like most of the
 other entries in this file — but the fix isn't obvious from the error text
 alone since it doesn't say which section is correct.
 
+## `apt remove` on the wallpaper package cascades into gdm3, gnome-shell, and ubuntu-desktop
+
+While decluttering `/usr/share/backgrounds` (see
+[wallpaper.md](wallpaper.md#wallpaper-images)), `sudo apt remove
+ubuntu-wallpapers ubuntu-wallpapers-noble` looked like the "correct",
+package-manager-tracked way to get rid of Ubuntu's stock wallpaper files —
+cleaner than `rm`-ing files a package owns. apt's dependency resolver
+disagreed: because `ubuntu-desktop`/`ubuntu-desktop-minimal` **directly
+depend** on `ubuntu-wallpapers` (not just recommend it), removing the
+wallpaper packages forced the removal of everything that depends on them,
+transitively:
+
+```
+Remove: gnome-shell, ubuntu-wallpapers, ubuntu-wallpapers-noble,
+ubuntu-desktop, gdm3, gnome-shell-extension-desktop-icons-ng,
+gnome-shell-extension-appindicator, ubuntu-session,
+gnome-shell-extension-manager, gnome-shell-extension-ubuntu-tiling-assistant,
+gnome-shell-extension-ubuntu-dock, ubuntu-desktop-minimal
+```
+
+`apt remove` prints this list before acting, but on a `-y` run (or a
+scroll-past) it's easy to miss that "remove two wallpaper packages" just
+became "remove the display manager." Nothing broke *immediately* — `gdm3`
+was still running as a live process (`systemctl status gdm.service` showed
+`active (running)`) even after its package was gone, because removal
+doesn't kill a running service — but the package itself showed `rc` (removed,
+config-only) in `dpkg -l`, meaning the *binary was gone*. On this VM,
+Hyprland is launched as a GDM Wayland session (see
+[setup.md](setup.md#environment)), so the next reboot would have had no
+display manager to start it, with no error until that reboot happened.
+
+Recovery: reinstalling every package from the `Remove:` line above except
+the two wallpaper ones (`apt install gnome-shell ubuntu-desktop gdm3 ...`)
+brought `gdm3` back to `ii` (properly installed). Because
+`ubuntu-desktop`/`ubuntu-desktop-minimal` still hard-depend on
+`ubuntu-wallpapers`, apt pulled both wallpaper packages back in too as a
+side effect — there's no way to keep those packages "installed" and their
+files gone at the same time.
+
+The actual fix for "declutter `/usr/share/backgrounds`" was to delete the
+image files directly with `rm` (files inside a directory a package owns,
+not the package's own files) instead of touching the package at all — the
+approach originally passed over as less "correct":
+
+```
+sudo find /usr/share/backgrounds -mindepth 1 ! -name '<keep>' ... -exec rm -rf {} +
+```
+
+This leaves `dpkg -V ubuntu-wallpapers-noble` reporting missing files, which
+is harmless (nothing depends on those specific files existing, only on the
+package being *installed*) and easily reversed with
+`apt install --reinstall` if ever needed. General lesson: before `apt
+remove`-ing a package purely to get rid of files it owns, check `apt-cache
+rdepends --installed <pkg>` (or read the `Remove:` line closely) — a
+`Depends` (not `Recommends`) from a meta-package like `ubuntu-desktop` turns
+a two-package removal into a cascade with no warning beyond that one line of
+output.
+
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already
