@@ -99,6 +99,28 @@ switched on Alt+Shift even when the `mainMod`+Shift keybind itself didn't
 fire. Worked around by using `grp:win_space_toggle` instead. Full context in
 [shortcuts.md](shortcuts.md#keyboard-layout-toggle-why-superspace-and-not-altshift).
 
+## `~/.local/bin` not visible to `bind = ..., exec`
+
+`mainMod`+B (wallpaper picker) silently did nothing when bound as plain
+`exec, waypaper`. Root cause: the session is started by GDM
+(`Service=gdm-autologin`, `Type=wayland` in `loginctl show-session`), which
+never sources `~/.profile`/`~/.bashrc` — the files that normally put
+`~/.local/bin` on `PATH`. `waypaper` is installed via `pipx`
+(`~/.local/share/pipx/venvs/waypaper`, symlinked into `~/.local/bin`), not
+apt, so it isn't on `PATH` in the environment Hyprland actually execs
+commands in, even though it resolves fine from an interactive shell.
+
+Fix: bind to the absolute path instead of relying on `PATH`:
+
+```
+bind = $mainMod, B, exec, /home/user/.local/bin/waypaper --folder /usr/share/backgrounds --backend hyprpaper
+```
+
+Same trap applies to any other pipx/pip-installed or otherwise
+`~/.local/bin`-only binary invoked from a `bind`/`exec-once` line — it'll
+work when typed in a terminal and do nothing when triggered from a keybind,
+with no error visible anywhere obvious.
+
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already

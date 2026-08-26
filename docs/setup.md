@@ -39,6 +39,7 @@ for the problem this causes.
 | rofi | 1.7.5-0.1build2 | Ubuntu repo |
 | wofi | 1.4.1-1build2 | Ubuntu repo (installed, unused — see [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi)) |
 | wlogout | 1.1.1-3build2 | Ubuntu repo |
+| waypaper | 2.8 | pipx (`~/.local/share/pipx/venvs/waypaper`), not apt — see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) |
 | cliphist | 0.4.0-2ubuntu0.3 | Ubuntu repo |
 | wl-clipboard | 2.2.1-1build1 | Ubuntu repo |
 | grim | 1.4.0+ds-2build2 | Ubuntu repo |
