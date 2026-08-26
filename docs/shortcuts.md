@@ -56,17 +56,17 @@ Both `mainMod`+R and `mainMod`+Shift+V go through `rofi`, configured in
 `~/.config/rofi/config.rasi`:
 
 ```
-@theme "/home/user/.config/rofi/launchers/type-2/style-1.rasi"
+@theme "/home/user/.config/rofi/launchers/type-2/style-2.rasi"
 
 configuration {
 	modes: "drun,run,window";
 	display-drun: "Apps";
 }
 * {
-    font: "Iosevka Nerd Font 16";
+    font: "Iosevka Nerd Font 20";
 }
 window {
-    width: 25%;
+    width: 32%;
 }
 ```
 
@@ -93,7 +93,7 @@ the repo's own documented procedure — clone kept at `~/git/rofi`, then its
   `~/.config/rofi/applets/type-{1..5}`, `~/.config/rofi/powermenu/type-{1..6}`
   (every style in each), and `~/.config/rofi/colors/` (all 16 built-in
   color schemes) — around 90 launcher styles alone. Of all of it, only
-  `type-2/style-1` is wired to a keybind right now; the rest sits on disk to
+  `type-2/style-2` is wired to a keybind right now; the rest sits on disk to
   pick from later by changing the `@theme` line above (and, for
   `applets`/`powermenu`, adding a new `bind` — none is bound today).
 
@@ -114,21 +114,33 @@ across the whole collection rather than a mix. That's the one line upstream
 expects you to edit per the README — not a local hack, just applied
 everywhere instead of only in the type actually in use.
 
+Later, gruvbox was dropped for the one style actually in use —
+`type-2/shared/colors.rasi` now imports `colors/nord.rasi` instead, by
+request (gruvbox wasn't to taste once seen live). Everything else installed
+(the other launcher types, `applets`, `powermenu`) still imports gruvbox —
+the "one consistent palette across the whole collection" from above no
+longer holds VM-wide, only within whichever style is actually bound to a
+keybind. `~/.config/rofi/colors/` has all 16 built-in schemes on disk
+(adapta, arc, black, catppuccin, cyberpunk, dracula, everforest, gruvbox,
+lovelace, navy, nord, onedark, paper, solarized, tokyonight, yousai) — swap
+by editing the `@import` line in the relevant `shared/colors.rasi`.
+
 Everything after `@theme` in `config.rasi` overrides the active style file
 (later declarations win the merge):
-- `display-drun` / `modes`: `style-1.rasi`'s own `configuration{}` sets
+- `display-drun` / `modes`: each style's own `configuration{}` sets
   `modi: "drun"` only and `display-drun: ""` (no label) — restored here to
   keep `run`/`window` mode-cycling and the "Apps" label.
 - `* { font: ... }`: `shared/fonts.rasi` already asks for
   `Iosevka Nerd Font 10`, now actually installed (see above) — 10pt is still
-  too small for this monitor, for the same reason as below, hence 16.
-- `window { width: 25%; }`: the style's own default is `400px`. Same
+  too small for this monitor, for the same reason as below. 20 is a further
+  manual bump on top of the scale-compensated 16, just for a bigger look.
+- `window { width: 32%; }`: the style's own default is `400px`. Same
   [XWayland-scale story as before](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
   `px` gets silently shrunk (see
   [config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor)),
-  so `25%` of the logical width (2560) is used instead, landing at the same
-  visual proportion as the original 400px design intent (400×1.6 ≈ 640
-  physical pixels).
+  so `%` of the logical width (2560) is used instead. `25%` (640 physical
+  pixels) matched the original 400px design intent (400×1.6); bumped to
+  `32%` (819 physical pixels) afterwards, by request, for a bigger window.
 
 `drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
 cliphist list) both use this one config — verified visually with `grim`
