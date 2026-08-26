@@ -71,6 +71,15 @@ Used by `foot` (`foot.ini`, see
 and by `waybar` (`style.css`) as a fallback after Ubuntu/Noto Sans — see
 [waybar.md](waybar.md#style).
 
+`Iosevka Nerd Font`, `GrapeNuts-Regular`, and a second `JetBrains Mono Nerd
+Font` build also live in `~/.local/share/fonts/` as flat `.ttf` files (not
+their own subdirectory, unlike the one above) — these came from the
+`fonts/` directory of [adi1090x/rofi](https://github.com/adi1090x/rofi),
+installed alongside its themes. See
+[shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi). Iosevka is
+the one actually in use, as the font the active rofi launcher style
+expects.
+
 ## Parallels Tools
 
 `prlcc` (`/usr/bin/prlcc`) is the guest-side Parallels Tools daemon — shared

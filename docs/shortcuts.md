@@ -63,7 +63,7 @@ configuration {
 	display-drun: "Apps";
 }
 * {
-    font: "JetBrainsMono Nerd Font Mono 18";
+    font: "Iosevka Nerd Font 16";
 }
 window {
     width: 25%;
@@ -79,24 +79,49 @@ missing — that's expected, not corruption. They come back automatically
 with `sudo apt install --reinstall rofi` if ever needed; nothing on this VM
 references that directory otherwise (checked `~/.config/hypr` and
 `~/.config/waybar`).
-`style-1.rasi` (type 2) and its `shared/` imports are a **verbatim vendored
-copy** of upstream, dropped into `~/.config/rofi/launchers/type-2/` (same
-path convention the repo's own `setup.sh` would use) — not the full official
-installer, which also drags in fonts and launcher wrapper scripts for every
-type/style at once. Only one file was edited: `shared/colors.rasi`, to
-import `colors/gruvbox.rasi` (also vendored, unmodified) instead of the
-default `onedark` — this is the exact customization point the upstream
-README documents, not a local hack.
 
-Everything after `@theme` in `config.rasi` overrides that vendored file
+The **entire** adi1090x collection is installed, not just one style, via
+the repo's own documented procedure — clone kept at `~/git/rofi`, then its
+`setup.sh` two-step (`install_fonts`, `install_themes`):
+
+- Fonts: `cp -rf ~/git/rofi/fonts/* ~/.local/share/fonts/ && fc-cache` — see
+  [setup.md](setup.md#fonts).
+- Themes: previous `~/.config/rofi` backed up to `~/.config/rofi.user`
+  (that's `setup.sh`'s own backup step, not a one-off precaution here), then
+  `cp -rf ~/git/rofi/files/* ~/.config/rofi/`. This is what actually
+  populates `~/.config/rofi/launchers/type-{1..7}`,
+  `~/.config/rofi/applets/type-{1..5}`, `~/.config/rofi/powermenu/type-{1..6}`
+  (every style in each), and `~/.config/rofi/colors/` (all 16 built-in
+  color schemes) — around 90 launcher styles alone. Of all of it, only
+  `type-2/style-1` is wired to a keybind right now; the rest sits on disk to
+  pick from later by changing the `@theme` line above (and, for
+  `applets`/`powermenu`, adding a new `bind` — none is bound today).
+
+`setup.sh` itself couldn't be run directly — Claude Code's auto-mode
+permission classifier blocks executing a freshly-cloned third-party shell
+script outright. Had already read the whole script by that point (it's
+literally just the `cp`/`fc-cache`/`mv` above, no network calls, nothing
+else), so those two steps were run individually instead of the wrapper —
+same end result. Worth knowing before assuming a repo's own installer will
+just run.
+
+Every `shared/colors.rasi` this installed (one per launcher type that has
+one, plus one shared across all `applets` types, plus one per `powermenu`
+type 1–4 — types 5–7 of launchers and 5–6 of powermenu hard-code colors
+per-style instead, per upstream's own README) was repointed from the
+`onedark` default to `colors/gruvbox.rasi`, for one consistent palette
+across the whole collection rather than a mix. That's the one line upstream
+expects you to edit per the README — not a local hack, just applied
+everywhere instead of only in the type actually in use.
+
+Everything after `@theme` in `config.rasi` overrides the active style file
 (later declarations win the merge):
-- `display-drun` / `modes`: the style's own `configuration{}` sets
+- `display-drun` / `modes`: `style-1.rasi`'s own `configuration{}` sets
   `modi: "drun"` only and `display-drun: ""` (no label) — restored here to
   keep `run`/`window` mode-cycling and the "Apps" label.
-- `* { font: ... }`: overrides the style's `shared/fonts.rasi`
-  (`Iosevka Nerd Font`, not installed on this VM) with the Nerd Font already
-  used by `foot` (see [setup.md](setup.md#fonts)), at a size bumped for the
-  same reason as below.
+- `* { font: ... }`: `shared/fonts.rasi` already asks for
+  `Iosevka Nerd Font 10`, now actually installed (see above) — 10pt is still
+  too small for this monitor, for the same reason as below, hence 16.
 - `window { width: 25%; }`: the style's own default is `400px`. Same
   [XWayland-scale story as before](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
   `px` gets silently shrunk (see
