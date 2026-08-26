@@ -146,6 +146,32 @@ Verified by isolating the effect with `rofi -no-config -theme-str
 entirely, and reading the resulting window size back with
 `hyprctl clients -j`.
 
+## foot's `alpha` lives under `[colors]`, not `[main]`
+
+Setting terminal transparency in `foot.ini` by adding `alpha=0.92` under
+`[main]` (where `font=` already lives, so it seems like the natural spot)
+fails outright rather than being ignored:
+
+```
+error: /home/user/.config/foot/foot.ini:3: [main].alpha: 0.92: not a valid option: alpha
+```
+
+foot 1.16.2 treats background opacity as a color property, not a general
+`[main]` setting — it belongs under `[colors]`:
+
+```
+[main]
+font=JetBrainsMono Nerd Font Mono:size=11
+
+[colors]
+alpha=0.92
+```
+
+At least this one fails loudly (`foot --check-config` catches it, and foot
+itself refuses to start) instead of silently no-op'ing like most of the
+other entries in this file — but the fix isn't obvious from the error text
+alone since it doesn't say which section is correct.
+
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already

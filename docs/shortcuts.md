@@ -103,9 +103,11 @@ toggle was moved to Super+Space instead of chasing key-by-key exceptions.
 
 ## Terminal (foot) copy/paste
 
-`foot` (`~/.config/foot/foot.ini` only overrides the font — currently
-`JetBrainsMono Nerd Font Mono`, size 11, see [setup.md](setup.md#fonts) —
-clipboard bindings are the package defaults from `/etc/xdg/foot/foot.ini`):
+`foot` (`~/.config/foot/foot.ini` overrides font and background transparency
+— font is `JetBrainsMono Nerd Font Mono`, size 11, see
+[setup.md](setup.md#fonts); background is `[colors] alpha=0.92`, slightly
+see-through — everything else, including clipboard bindings, is the package
+default from `/etc/xdg/foot/foot.ini`):
 
 | Combo | Action |
 |---|---|
