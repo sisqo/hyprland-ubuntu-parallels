@@ -72,7 +72,13 @@ window {
 
 Only themes from [adi1090x/rofi](https://github.com/adi1090x/rofi) are used
 now — the previous rofi built-in themes (`Arc-Dark`, `gruvbox-dark-soft`,
-etc. in `/usr/share/rofi/themes/`) are no longer referenced anywhere.
+etc.) were deleted outright from `/usr/share/rofi/themes/` (`sudo rm`, by
+request), not just unreferenced. These are plain package-owned files (no
+`dpkg` conffile prompt), so `dpkg --verify rofi` now reports them all as
+missing — that's expected, not corruption. They come back automatically
+with `sudo apt install --reinstall rofi` if ever needed; nothing on this VM
+references that directory otherwise (checked `~/.config/hypr` and
+`~/.config/waybar`).
 `style-1.rasi` (type 2) and its `shared/` imports are a **verbatim vendored
 copy** of upstream, dropped into `~/.config/rofi/launchers/type-2/` (same
 path convention the repo's own `setup.sh` would use) — not the full official
