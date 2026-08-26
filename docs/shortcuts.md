@@ -34,6 +34,7 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + E | Open Nautilus (file manager) |
 | `mainMod` + V | Toggle floating |
 | `mainMod` + R | App launcher (rofi, `drun` mode) |
+| `mainMod` + Shift + R | Style picker for the installed rofi launcher styles — see below |
 | `mainMod` + P | Pseudotile |
 | `mainMod` + J | Toggle split direction |
 | `mainMod` + F | Fullscreen |
@@ -135,6 +136,40 @@ cliphist list) both use this one config — verified visually with `grim`
 screenshots for both. `wofi` is still installed (`1.4.1-1build2`) but
 nothing in `hyprland.conf` calls it anymore — it's an unused leftover from
 before the switch to rofi, not a fallback in active use.
+
+### Style picker (`mainMod`+Shift+R)
+
+rofi ships its own picker, `rofi-theme-selector` (visible in `drun` as "Rofi
+Theme Selector" — it has a `.desktop` entry at
+`/usr/share/applications/rofi-theme-selector.desktop`, from the `rofi`
+package itself, nothing to do with adi1090x). It only finds flat `.rasi`
+files inside a directory literally named `rofi/themes/` under
+`/usr/share`, `~/.local/share`, or `~/.config` (see its source,
+`/usr/bin/rofi-theme-selector`). adi1090x's styles live in
+`~/.config/rofi/launchers/type-N/style-M.rasi` instead, each importing a
+sibling `shared/colors.rasi` by relative path — a different layout that
+tool was never going to see, independent of the earlier deletion of the
+stock `/usr/share/rofi/themes/` files.
+
+`~/.config/hypr/scripts/rofi-style-picker.sh`, bound to `mainMod`+Shift+R,
+is a replacement that understands that layout instead. Same interaction
+model as `rofi-theme-selector` (deliberately — it's a re-implementation of
+its `select_theme()`/`set_theme()` loop, aimed at this repo's directory
+structure):
+
+- **Enter**: preview the highlighted style (relaunches itself with that
+  style as `-theme`, plus the same font/width compensation described
+  above, so the preview isn't tiny/blurry either).
+- **Alt+a**: apply whatever style is currently in preview — replaces the
+  `@theme` line in `config.rasi` with a plain `sed`, leaving the rest of
+  the file (the overrides after it) untouched.
+- **Escape**: cancel, no change.
+
+Scans all `launchers/type-*/style-*.rasi` (75 at the time of writing, all
+7 types) with `find` + `sort -V`, and pre-selects whichever one
+`config.rasi`'s current `@theme` line points at. `applets/` and
+`powermenu/` aren't included — neither is bound to anything, so there was
+nothing to preview them against.
 
 ## Keyboard layout toggle: why Super+Space and not Alt+Shift
 
