@@ -51,6 +51,26 @@ These versions are the baseline for every "in version X, Y happens" note in
 the other docs. If you upgrade a package, re-check those notes before
 trusting they still hold.
 
+## Fonts
+
+`JetBrainsMono Nerd Font Mono` (nerd-fonts v3.5.1) isn't in Ubuntu's repos —
+there's no `nerd-fonts`-style apt package on 24.04. Installed manually to
+`~/.local/share/fonts/JetBrainsMonoNerdFont/`, downloaded from the
+[nerd-fonts GitHub releases](https://github.com/ryanoasis/nerd-fonts/releases)
+(`JetBrainsMono.zip`), then `fc-cache -f` to register it.
+
+The release zip ships every weight (Thin through ExtraBold) across three
+spacing variants (`NF`, `NFM` "Mono", `NFP` "Propo") — about 230MB. Only the
+four `...Mono` static styles actually in use are kept
+(Regular/Bold/Italic/BoldItalic, ~10MB): `NFM` is the fixed-width variant,
+the right one for a terminal or a monospace UI font, unlike `NF` (variable
+glyph width) or `NFP` (proportional).
+
+Used by `foot` (`foot.ini`, see
+[shortcuts.md](shortcuts.md#terminal-foot-copypaste)) as the active font,
+and by `waybar` (`style.css`) as a fallback after Ubuntu/Noto Sans — see
+[waybar.md](waybar.md#style).
+
 ## Parallels Tools
 
 `prlcc` (`/usr/bin/prlcc`) is the guest-side Parallels Tools daemon — shared

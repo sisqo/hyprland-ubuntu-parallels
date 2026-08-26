@@ -37,6 +37,12 @@ wrapper script instead of directly, see
 
 ## Style
 
+`font-family` is `"Ubuntu", "Noto Sans", "JetBrainsMono Nerd Font Mono",
+sans-serif` — the Nerd Font is a fallback after the two text fonts (see
+[setup.md](setup.md#fonts)). No module currently uses icon glyphs (e.g.
+`idle_inhibitor` shows `AWAKE`/`IDLE` as plain text — see above), this just
+makes glyph icons available to add later without a font install first.
+
 Colors match the Tokyo Night palette used across the rest of the setup
 (`hyprland.conf` borders, `mako` notifications, `hyprlock`): background
 `#1a1b26` at 92% opacity, accent `#7aa2f7`, text `#c0caf5`/`#a9b1d6`, warning

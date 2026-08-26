@@ -61,11 +61,15 @@ configuration {
 	show-icons: true;
 	icon-theme: "Adwaita";
 	drun-display-format: "{name}";
-	font: "sans 11";
+	font: "sans 18";
 }
 
-@theme "/usr/share/rofi/themes/Arc-Dark.rasi"
+@theme "/usr/share/rofi/themes/gruvbox-dark-soft.rasi"
 ```
+
+The theme is one of rofi's built-in themes (`/usr/share/rofi/themes/`,
+shipped by the `rofi` package itself) — no download needed, just the
+`@theme` path.
 
 `drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
 cliphist list) are both covered by this one config. `wofi` is still
@@ -87,8 +91,9 @@ toggle was moved to Super+Space instead of chasing key-by-key exceptions.
 
 ## Terminal (foot) copy/paste
 
-`foot` (`~/.config/foot/foot.ini` only overrides the font — clipboard
-bindings are the package defaults from `/etc/xdg/foot/foot.ini`):
+`foot` (`~/.config/foot/foot.ini` only overrides the font — currently
+`JetBrainsMono Nerd Font Mono`, size 11, see [setup.md](setup.md#fonts) —
+clipboard bindings are the package defaults from `/etc/xdg/foot/foot.ini`):
 
 | Combo | Action |
 |---|---|
