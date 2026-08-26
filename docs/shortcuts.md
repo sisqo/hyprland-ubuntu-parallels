@@ -56,38 +56,54 @@ Both `mainMod`+R and `mainMod`+Shift+V go through `rofi`, configured in
 `~/.config/rofi/config.rasi`:
 
 ```
+@theme "/home/user/.config/rofi/launchers/type-2/style-1.rasi"
+
 configuration {
 	modes: "drun,run,window";
-	show-icons: true;
-	icon-theme: "Adwaita";
-	drun-display-format: "{name}";
-	font: "sans 18";
+	display-drun: "Apps";
 }
-
-@theme "/usr/share/rofi/themes/gruvbox-dark-soft.rasi"
-
+* {
+    font: "JetBrainsMono Nerd Font Mono 18";
+}
 window {
-    width: 45%;
+    width: 25%;
 }
 ```
 
-The theme is one of rofi's built-in themes (`/usr/share/rofi/themes/`,
-shipped by the `rofi` package itself) — no download needed, just the
-`@theme` path.
+Only themes from [adi1090x/rofi](https://github.com/adi1090x/rofi) are used
+now — the previous rofi built-in themes (`Arc-Dark`, `gruvbox-dark-soft`,
+etc. in `/usr/share/rofi/themes/`) are no longer referenced anywhere.
+`style-1.rasi` (type 2) and its `shared/` imports are a **verbatim vendored
+copy** of upstream, dropped into `~/.config/rofi/launchers/type-2/` (same
+path convention the repo's own `setup.sh` would use) — not the full official
+installer, which also drags in fonts and launcher wrapper scripts for every
+type/style at once. Only one file was edited: `shared/colors.rasi`, to
+import `colors/gruvbox.rasi` (also vendored, unmodified) instead of the
+default `onedark` — this is the exact customization point the upstream
+README documents, not a local hack.
 
-`font: "sans 18"` (bumped from the original 11) and the `window { width: 45%; }`
-override placed after `@theme` (so it wins over the theme's own `window`
-block) both exist to compensate for
-[XWayland not getting the compositor's 1.6 scale applied](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
-without them rofi is sharp but noticeably smaller than before the fix. `width`
-uses `%`, not `px`, for a reason that isn't obvious — see
-[config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor).
+Everything after `@theme` in `config.rasi` overrides that vendored file
+(later declarations win the merge):
+- `display-drun` / `modes`: the style's own `configuration{}` sets
+  `modi: "drun"` only and `display-drun: ""` (no label) — restored here to
+  keep `run`/`window` mode-cycling and the "Apps" label.
+- `* { font: ... }`: overrides the style's `shared/fonts.rasi`
+  (`Iosevka Nerd Font`, not installed on this VM) with the Nerd Font already
+  used by `foot` (see [setup.md](setup.md#fonts)), at a size bumped for the
+  same reason as below.
+- `window { width: 25%; }`: the style's own default is `400px`. Same
+  [XWayland-scale story as before](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
+  `px` gets silently shrunk (see
+  [config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor)),
+  so `25%` of the logical width (2560) is used instead, landing at the same
+  visual proportion as the original 400px design intent (400×1.6 ≈ 640
+  physical pixels).
 
 `drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
-cliphist list) are both covered by this one config. `wofi` is still
-installed (`1.4.1-1build2`) but nothing in `hyprland.conf` calls it anymore —
-it's an unused leftover from before the switch to rofi, not a fallback in
-active use.
+cliphist list) both use this one config — verified visually with `grim`
+screenshots for both. `wofi` is still installed (`1.4.1-1build2`) but
+nothing in `hyprland.conf` calls it anymore — it's an unused leftover from
+before the switch to rofi, not a fallback in active use.
 
 ## Keyboard layout toggle: why Super+Space and not Alt+Shift
 
