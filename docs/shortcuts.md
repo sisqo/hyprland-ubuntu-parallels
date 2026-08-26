@@ -65,11 +65,23 @@ configuration {
 }
 
 @theme "/usr/share/rofi/themes/gruvbox-dark-soft.rasi"
+
+window {
+    width: 45%;
+}
 ```
 
 The theme is one of rofi's built-in themes (`/usr/share/rofi/themes/`,
 shipped by the `rofi` package itself) — no download needed, just the
 `@theme` path.
+
+`font: "sans 18"` (bumped from the original 11) and the `window { width: 45%; }`
+override placed after `@theme` (so it wins over the theme's own `window`
+block) both exist to compensate for
+[XWayland not getting the compositor's 1.6 scale applied](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
+without them rofi is sharp but noticeably smaller than before the fix. `width`
+uses `%`, not `px`, for a reason that isn't obvious — see
+[config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor).
 
 `drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
 cliphist list) are both covered by this one config. `wofi` is still

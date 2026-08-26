@@ -53,6 +53,38 @@ into the host. It needs to be changed by hand if the host display changes.
    hyprctl reload
    ```
 
+## XWayland apps render blurry and undersized at scale 1.6
+
+X11 apps that go through XWayland (not native Wayland — e.g. `rofi` 1.7.5,
+which has no `rofi-wayland` fork in the Ubuntu `noble` repos) don't get the
+compositor's fractional scale applied the way native Wayland clients do.
+XWayland rendered them at the logical resolution (2560×1350, i.e. unscaled),
+and Hyprland then upscaled that buffer 1.6× for compositing — the result was
+blurry ("non sembra retina, è tutto sgranato") on top of already being
+undersized.
+
+Fixed in `hyprland.conf`:
+
+```
+xwayland {
+    force_zero_scaling = true
+}
+```
+
+This makes XWayland clients render 1:1 against physical pixels — sharp, but
+now unaware of the 1.6 scale, so they come out visually smaller than before.
+Each affected app's own config has to compensate for the lost scale
+individually; see [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi)
+for how `rofi` does it, and
+[config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor)
+for a DPI quirk that trips up the obvious fix.
+
+`force_zero_scaling` is a session-wide XWayland setting, not per-app. As of
+2026-08-26, no other app on this VM uses XWayland (Chrome and `foot` both run
+native Wayland — checked with `hyprctl clients -j | grep xwayland`), so this
+had no side effects here, but any future X11-only app would need the same
+size compensation.
+
 ## Cursor disappearing or flickering
 
 virtio-gpu here doesn't expose a hardware cursor plane

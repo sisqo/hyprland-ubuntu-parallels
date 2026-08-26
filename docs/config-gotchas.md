@@ -121,6 +121,31 @@ Same trap applies to any other pipx/pip-installed or otherwise
 work when typed in a terminal and do nothing when triggered from a keybind,
 with no error visible anywhere obvious.
 
+## rofi absolute width silently shrunk by a 0.625 factor
+
+After enabling `xwayland.force_zero_scaling` (see
+[graphics.md](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16)),
+the obvious next step was to make rofi's launcher window bigger again by
+setting an explicit `window { width: <N>px; }` in `~/.config/rofi/config.rasi`.
+It didn't work as expected: every absolute width (`px`, or a bare number,
+which rofi treats as `px`) came back **0.625× smaller than requested** —
+e.g. asking for `2000px` measured out (via `hyprctl clients -j`) to 1250px,
+and rofi's own compiled-in default width of `1280` (unstated anywhere in this
+config) is why the window looked stuck at 800px physical pixels no matter
+what `px` value was tried.
+
+`%` values aren't affected — they're computed against the logical monitor
+width (2560, i.e. `4096 / 1.6`) with no extra conversion, so `width: 45%`
+gives exactly 1152px physical, as expected. Root cause not fully nailed down
+(likely rofi's own DPI auto-detection interacting with
+`force_zero_scaling`), but the workaround is simple: always use `%` for
+`window { width: ...; }` in this rasi config, never `px` or a bare number.
+
+Verified by isolating the effect with `rofi -no-config -theme-str
+'window { width: <value>; }'` at several values, bypassing `config.rasi`
+entirely, and reading the resulting window size back with
+`hyprctl clients -j`.
+
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already
