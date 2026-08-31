@@ -47,6 +47,8 @@ for the problem this causes.
 | slurp | 1.5.0-1 | Ubuntu repo |
 | foot | 1.16.2-2ubuntu0.1 | Ubuntu repo |
 | nautilus | 1:46.4-0ubuntu0.2 | Ubuntu repo |
+| xdg-user-dirs | 0.18-1build1 | Ubuntu repo |
+| xdg-user-dirs-gtk | 0.11-1build2 | Ubuntu repo — see [config-gotchas.md](config-gotchas.md#nautilus-sidebar-folders-reappear-even-with-enabledfalse) |
 
 These versions are the baseline for every "in version X, Y happens" note in
 the other docs. If you upgrade a package, re-check those notes before

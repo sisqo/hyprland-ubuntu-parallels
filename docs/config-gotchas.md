@@ -230,6 +230,65 @@ rdepends --installed <pkg>` (or read the `Remove:` line closely) — a
 a two-package removal into a cascade with no warning beyond that one line of
 output.
 
+## Nautilus sidebar folders reappear even with `enabled=False`
+
+Not a Hyprland gotcha, but same VM, same shape: `~/.config/user-dirs.conf`
+(and the system-wide `/etc/xdg/user-dirs.conf`) both had `enabled=False`,
+which per `man user-dirs.conf` should stop `xdg-user-dirs-update` from
+touching XDG user dir config — confirmed empirically, including with
+`--force`, which still no-ops. Yet unwanted entries kept coming back in
+Nautilus's sidebar (Music/Pictures/Videos/Documents/Downloads) on every
+reboot, and a manually-added custom shortcut (`~/git`) kept disappearing.
+
+Two separate mechanisms were involved, and the `enabled` flag only covers
+one of them:
+
+- **Custom shortcuts** (e.g. `~/git`) live in `~/.config/gtk-3.0/bookmarks`
+  (one `file:///path` per line) — still true on Nautilus 46/GTK4, the file
+  stays under `gtk-3.0/`, not `gtk-4.0/`. Editable directly, takes effect on
+  next Nautilus launch.
+- **XDG "special" folders** (Music/Pictures/Videos/Documents/Downloads/
+  Desktop/Templates/Public) are *not* bookmarks — Nautilus always shows them
+  based on `~/.config/user-dirs.dirs`, regardless of the bookmarks file
+  content.
+
+The bookmarks file was being reset every login by
+`/etc/xdg/autostart/user-dirs-update-gtk.desktop` (`Exec=xdg-user-dirs-gtk-update`,
+turned into the systemd unit `app-user\x2ddirs\x2dupdate\x2dgtk@autostart.service`
+by `systemd-xdg-autostart-generator`, run as part of `xdg-desktop-autostart.target`
+on session start). Confirmed via its binary strings: unlike
+`xdg-user-dirs-update`, `xdg-user-dirs-gtk-update` never references
+`enabled` at all — the config flag documented in `man user-dirs.conf` simply
+doesn't apply to it. Its bookmarks rewrite was also confirmed by timing:
+`~/.config/gtk-3.0/bookmarks` mtime matched `who -b` exactly.
+
+Fix, two parts:
+
+1. Stop the reset — override the autostart entry per-user (no system files
+   touched, survives reboots):
+
+   ```
+   # ~/.config/autostart/user-dirs-update-gtk.desktop
+   [Desktop Entry]
+   Type=Application
+   Name=User folders update
+   Hidden=true
+   ```
+
+2. Remove unwanted custom shortcuts from `~/.config/gtk-3.0/bookmarks`
+   directly (plain text edit), and for unwanted *special* folders, repoint
+   them at `$HOME` in `~/.config/user-dirs.dirs` instead of at a
+   subdirectory, e.g. `XDG_MUSIC_DIR="$HOME"` instead of
+   `XDG_MUSIC_DIR="$HOME/Music"` — this only unregisters the folder as a
+   distinct "place", it does not touch or delete the real directory on disk.
+
+   Left `XDG_DOCUMENTS_DIR`/`XDG_DOWNLOAD_DIR` pointed at their real
+   subfolders deliberately: repointing those to `$HOME` would also change
+   where apps (browser downloads, PDF export, etc.) save by default, not
+   just what shows in the sidebar — a bigger side effect than "hide a shortcut",
+   only worth it for folders (Music/Pictures/Videos here) that are actually
+   empty and unused.
+
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already
