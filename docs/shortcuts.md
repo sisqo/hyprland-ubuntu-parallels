@@ -41,6 +41,8 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + X | Power menu (wlogout) |
 | `mainMod` + Shift + V | Clipboard history picker (cliphist + rofi) — see [clipboard.md](clipboard.md) |
 | `mainMod` + B | Wallpaper picker (waypaper, swww backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) and [wallpaper.md](wallpaper.md) |
+| `mainMod` + K | Quicklinks picker (`~/.config/hypr/scripts/rofi-quicklinks.sh`) |
+| `mainMod` + Plus | Open a terminal (foot) running `cla` — an interactive picker that `cd`s into a project under `~/git` and execs `claude` there. Bound to the full path (`/home/user/.local/bin/cla`) for the same reason as `mainMod`+B, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec). The script itself lives in its own repo, [sisqo/utils](https://github.com/sisqo/utils) — cloned at `~/git/utils`, `bin/cla` symlinked into `~/.local/bin/cla` — not part of this repo and not copied here, same reasoning as the "no config copies" note in the README |
 | Print | Screenshot a region (grim+slurp) to clipboard |
 | Shift + Print | Screenshot the full screen to clipboard |
 | `mainMod` + arrows | Move focus between windows |

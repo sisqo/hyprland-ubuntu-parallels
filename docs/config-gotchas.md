@@ -121,6 +121,20 @@ Same trap applies to any other pipx/pip-installed or otherwise
 work when typed in a terminal and do nothing when triggered from a keybind,
 with no error visible anywhere obvious.
 
+Variant that bit `mainMod`+`+` (the `cla` project picker, `bind = $mainMod,
+plus, exec, foot /home/user/.local/bin/cla`): the *bound* command was already
+an absolute path, so `cla` itself started fine and its interactive menu
+showed up. The failure was one level deeper — after picking a project, `cla`
+did `exec claude --remote-control ...` using the bare command name. `claude`
+also lives in `~/.local/bin`, so under Hyprland's exec `PATH` that lookup
+failed, `set -euo pipefail` killed the script, and `foot` closed with it —
+instead of "nothing happens" this variant looks like "the terminal opens,
+the menu works, then it slams shut the instant you confirm a choice."
+Fix is the same: absolute-path the inner call too
+(`exec /home/user/.local/bin/claude ...`). Worth checking any script invoked
+this way for *other* bare-name calls to `~/.local/bin`-only tools, not just
+the top-level bind.
+
 ## rofi absolute width silently shrunk by a 0.625 factor
 
 After enabling `xwayland.force_zero_scaling` (see
