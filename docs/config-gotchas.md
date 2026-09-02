@@ -34,6 +34,28 @@ If waybar ever gets upgraded past 0.9.24 (or replaced by a build that reads
 `$XDG_RUNTIME_DIR` directly), this wrapper becomes unnecessary and can be
 dropped.
 
+## waybar 0.9.24 doesn't live-reload on SIGUSR2
+
+Newer waybar builds reload `config`/`style.css` in place on `SIGUSR2`
+(`pkill -SIGUSR2 waybar`). On 0.9.24 this signal is accepted (exits 0, no
+error) but has no visible effect — the bar keeps rendering the old config
+indefinitely, which looks exactly like "the edit didn't get picked up" with
+no error anywhere to point at the real cause.
+
+Fix: kill and relaunch the process instead of signaling it, through the same
+wrapper Hyprland itself uses (see
+[waybar and Hyprland's IPC socket](#waybar-and-hyprlands-ipc-socket) above —
+launching the raw `waybar` binary without it breaks the IPC socket path):
+
+```sh
+pkill waybar
+/home/user/.local/bin/waybar-hypr &
+disown
+```
+
+If waybar ever gets upgraded past 0.9.24, re-check whether `SIGUSR2` starts
+working before assuming this workaround is still needed.
+
 ## hyprpaper 0.8 syntax change
 
 hyprpaper 0.8.4 (installed here) changed its config format:

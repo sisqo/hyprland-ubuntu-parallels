@@ -11,12 +11,17 @@ wrapper script instead of directly, see
 
 | Zone | Modules |
 |---|---|
-| Left | `hyprland/workspaces` (click to switch), `hyprland/submap` |
+| Left | `custom/branding` (static "SisQo 1.0" label), `hyprland/workspaces` (click to switch), `hyprland/submap` |
 | Center | `hyprland/window` — focused window title, truncated at 60 chars, per-output |
 | Right | `idle_inhibitor`, `cpu`, `memory`, `disk`, `pulseaudio`, `network`, `clock`, `tray`, `custom/shortcuts`, `custom/power` |
 
 ## Notable module settings
 
+- **custom/branding**: no `exec` — just a literal `format: "SisQo 1.0"`, so
+  it's static text with no update interval. Styled in the same accent color
+  as `clock` (`#7aa2f7`, bold). Applying a config change to this or any other
+  module needs a full waybar restart, not just a reload signal — see
+  [config-gotchas.md](config-gotchas.md#waybar-0924-doesnt-live-reload-on-sigusr2).
 - **idle_inhibitor**: toggles between `AWAKE`/`IDLE` text (no icon font
   assumed). Only inhibits *screen* idling — it doesn't affect the missing
   auto-lock listener noted in
