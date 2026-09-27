@@ -43,6 +43,7 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + B | Wallpaper picker (waypaper, swww backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) and [wallpaper.md](wallpaper.md) |
 | `mainMod` + K | Quicklinks picker (`~/.config/hypr/scripts/rofi-quicklinks.sh`) |
 | `mainMod` + Plus | Open a terminal (foot) running `cla` — an interactive picker that `cd`s into a project under `~/git` and execs `claude` there. Bound to the full path (`/home/user/.local/bin/cla`) for the same reason as `mainMod`+B, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec). The script itself lives in its own repo, [sisqo/utils](https://github.com/sisqo/utils) — cloned at `~/git/utils`, `bin/cla` symlinked into `~/.local/bin/cla` — not part of this repo and not copied here, same reasoning as the "no config copies" note in the README |
+| `mainMod` + È | Same as `mainMod`+Plus, but runs `cla2`: a full-screen, more flashy version of the same picker (git inspector, fuzzy search, mouse), in the same [sisqo/utils](https://github.com/sisqo/utils) repo, `bin/cla2` symlinked into `~/.local/bin/cla2`. The key is `egrave` in the bind, since the layout is `it` and `è` sits where `[` is on US. Full path for the same reason as `cla` |
 | Print | Screenshot a region (grim+slurp) to clipboard |
 | Shift + Print | Screenshot the full screen to clipboard |
 | `mainMod` + arrows | Move focus between windows |
