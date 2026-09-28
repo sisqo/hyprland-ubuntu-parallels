@@ -25,6 +25,10 @@ PPA. It's an older version (0.9.24) than what Hyprland expects to talk to —
 see [config-gotchas.md](config-gotchas.md#waybar-and-hyprlands-ipc-socket)
 for the problem this causes.
 
+Hyprland 0.56 deprecates the `hyprland.conf` format and 0.57 removes it:
+see [config-gotchas.md](config-gotchas.md#conf-hyprlang-config-deprecated-in-056-removed-in-057)
+before upgrading the `hyprland` package past 0.56.
+
 ## Installed versions (checked 2026-08-26, `dpkg -l`)
 
 | Package | Version | Source |

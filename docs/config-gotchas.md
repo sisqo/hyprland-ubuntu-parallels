@@ -333,3 +333,32 @@ adds a `vfr = 1` line thinking it's required. See
 [graphics.md](graphics.md#vrr-and-vfr) — this is unrelated to the separate
 `vrr = 0` setting on the same block, which is about the (irrelevant on a
 virtual monitor) variable refresh rate.
+
+## `.conf` (hyprlang) config deprecated in 0.56, removed in 0.57
+
+Hyprland 0.56.2 shows a notification at every login: "You are using the
+.conf config format, support for which will be removed in Hyprland 0.57".
+Nothing is broken yet: `hyprctl configerrors` is empty and the log only
+says `[cfg] Lua config not found, using legacy config at
+/home/user/.config/hypr/hyprland.conf`. But 0.57 won't read `hyprland.conf`
+at all, so an `apt upgrade` that pulls 0.57 from the PPA would bring up a
+session with no binds, no waybar and no autostart.
+
+The replacement is a Lua config, `~/.config/hypr/hyprland.lua`. If that
+file exists Hyprland loads it and ignores `hyprland.conf`. There is no
+automatic converter (`Hyprland --help` has none), so the file is converted
+by hand, using two references shipped by the package:
+
+- `/usr/share/hypr/hyprland.lua`: the official example config
+- `/usr/share/hypr/stubs/hl.meta.lua`: the full API (config keys,
+  dispatchers, rule fields)
+
+To check a Lua config without restarting, run
+`Hyprland --verify-config -c ~/.config/hypr/hyprland.lua`. It is strict: it
+rejects unknown config keys, bad dispatcher arguments and unknown window-rule
+fields, and prints `config ok` otherwise. `hyprctl eval` doesn't help here,
+because it only runs when the session itself was started with the Lua config
+(`eval is only supported with the lua config manager`).
+
+Only `hyprland.conf` is affected. `hyprlock.conf`, `hypridle.conf` and
+`hyprpaper.conf` belong to separate tools and keep their own format.
