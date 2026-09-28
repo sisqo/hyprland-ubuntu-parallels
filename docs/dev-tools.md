@@ -13,11 +13,11 @@ this VM (2 vCPU, 8 GB RAM, virtio-gpu at scale 1.6).
 `/usr/share/keyrings/microsoft-archive-keyring.gpg`.
 
 It runs as a native Wayland client — `hyprctl clients -j` reports
-`"xwayland": false` for class `code` — because `hyprland.conf` exports, in
-its `### Ambiente` block (line 47):
+`"xwayland": false` for class `code` — because `hyprland.lua` exports, in
+its `--- Ambiente` block:
 
-```
-env = ELECTRON_OZONE_PLATFORM_HINT,auto
+```lua
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 ```
 
 That one line covers every Electron app started from the session (Claude

@@ -25,9 +25,10 @@ PPA. It's an older version (0.9.24) than what Hyprland expects to talk to —
 see [config-gotchas.md](config-gotchas.md#waybar-and-hyprlands-ipc-socket)
 for the problem this causes.
 
-Hyprland 0.56 deprecates the `hyprland.conf` format and 0.57 removes it:
-see [config-gotchas.md](config-gotchas.md#conf-hyprlang-config-deprecated-in-056-removed-in-057)
-before upgrading the `hyprland` package past 0.56.
+The Hyprland config is `~/.config/hypr/hyprland.lua`. Hyprland 0.56
+deprecates the old `hyprland.conf` format and 0.57 removes it, so the config
+was migrated by hand. See
+[config-gotchas.md](config-gotchas.md#conf-hyprlang-config-deprecated-in-056-removed-in-057).
 
 ## Installed versions (checked 2026-08-26, `dpkg -l`)
 
@@ -43,7 +44,7 @@ before upgrading the `hyprland` package past 0.56.
 | rofi | 1.7.5-0.1build2 | Ubuntu repo |
 | wofi | 1.4.1-1build2 | Ubuntu repo (installed, unused — see [shortcuts.md](shortcuts.md#launcher-and-clipboard-picker-rofi)) |
 | wlogout | 1.1.1-3build2 | Ubuntu repo |
-| waypaper | 2.8 | pipx (`~/.local/share/pipx/venvs/waypaper`), not apt — see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) |
+| waypaper | 2.8 | pipx (`~/.local/share/pipx/venvs/waypaper`), not apt — see [config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind---exec) |
 | swww / swww-daemon | 0.11.2 | built from source via `cargo install --git` (`~/.cargo/bin`), not apt or crates.io — see [wallpaper.md](wallpaper.md#install-built-from-source-not-packaged) |
 | cliphist | 0.4.0-2ubuntu0.3 | Ubuntu repo |
 | wl-clipboard | 2.2.1-1build1 | Ubuntu repo |
@@ -95,13 +96,13 @@ Ubuntu 24.04's packaged `rustc`/`cargo` are 1.75.0, older than that crate
 requires. Installed via [rustup](https://rustup.rs) (`~/.cargo`,
 `~/.rustup`), not apt, so `~/.cargo/bin` needs the same "not on Hyprland's
 exec PATH" treatment as any other non-apt binary — see
-[config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec).
+[config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind---exec).
 
 ## Parallels Tools
 
 `prlcc` (`/usr/bin/prlcc`) is the guest-side Parallels Tools daemon — shared
-clipboard host↔VM, drag&drop, dynamic screen resize. It's started via
-`exec-once` in `hyprland.conf`, not as a systemd service (there is no
+clipboard host↔VM, drag&drop, dynamic screen resize. It's started from the
+`hyprland.start` handler in `hyprland.lua`, not as a systemd service (there is no
 `prlcc.service`). Clipboard details in [clipboard.md](clipboard.md); dynamic
 resize (which doesn't work here) in [graphics.md](graphics.md).
 
@@ -110,13 +111,18 @@ resize (which doesn't work here) in [graphics.md](graphics.md).
 Observations from reading the current config, not yet acted on:
 
 - `~/.config/hypr/monitors.conf` and `workspaces.conf` exist but are **empty
-  and not included** by any `source =` in `hyprland.conf`: they look like
-  placeholders for a future config split, currently dead.
+  and not loaded**: the old `hyprland.conf` never `source`d them and
+  `hyprland.lua` doesn't `require` them. They look like placeholders for a
+  config split that never happened, and they're dead.
+- `~/.config/hypr/hyprland.conf.pre-lua` (plus two older
+  `hyprland.conf.bak-*`) is the last hyprlang config before the Lua
+  migration, kept for reference only. Hyprland ignores it, so editing it does
+  nothing.
 - `~/.config/hypr/hypridle.conf` has a 600s auto-lock listener **commented
   out** (`# on-timeout = loginctl lock-session`); the only active listener
   turns off DPMS at 900s. In practice the screen blanks after 15 minutes of
   inactivity but the session **does not lock automatically**.
-- `bind = ALT, F4, killactive,` in `hyprland.conf` is redundant with
-  `$mainMod, Q, killactive,` since `$mainMod` is already `ALT` — almost
+- The `ALT + F4` close-window bind in `hyprland.lua` is redundant with
+  `mainMod .. " + Q"` since `mainMod` is already `ALT` — almost
   certainly a leftover from when `mainMod` was `SUPER` (see
   [shortcuts.md](shortcuts.md)).

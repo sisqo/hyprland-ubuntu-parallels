@@ -1,17 +1,18 @@
 # Shortcuts
 
 This table can drift from the live config over time. For the current,
-authoritative list straight from `hyprland.conf`, click the keyboard icon
-in the top bar (`custom/shortcuts` — see [waybar.md](waybar.md)), which runs
-`~/.config/hypr/scripts/shortcuts.sh`.
+authoritative list, click the keyboard icon in the top bar
+(`custom/shortcuts`, see [waybar.md](waybar.md)). It runs
+`~/.config/hypr/scripts/shortcuts.sh`, which lists the binds loaded right now
+(`hyprctl binds -j`) with their `desc`.
 
 ## `mainMod` is ALT (Option), not SUPER
 
 If you know Hyprland's usual cheatsheets, expect Super — this config
 deliberately doesn't use it:
 
-```
-$mainMod = ALT
+```lua
+local mainMod = "ALT"
 ```
 
 On this VM, Cmd (SUPER on a Mac keyboard) is macOS's own "system" modifier,
@@ -23,7 +24,13 @@ Option+letter always arrives clean and unmodified, so `mainMod` was moved to
 
 This also frees up SUPER for the keyboard-layout toggle below.
 
-## Bindings (`~/.config/hypr/hyprland.conf`)
+## Bindings (`~/.config/hypr/hyprland.lua`)
+
+Every `hl.bind` carries a `desc = "..."` option. That's what the shortcuts
+menu shows, because under the Lua config `hyprctl binds` reports every bind
+as dispatcher `__lua` with a numeric id (see
+[config-gotchas.md](config-gotchas.md#conf-hyprlang-config-deprecated-in-056-removed-in-057)).
+A new bind without `desc` shows up in the menu as `__lua <n>`.
 
 | Combo | Action |
 |---|---|
@@ -39,11 +46,12 @@ This also frees up SUPER for the keyboard-layout toggle below.
 | `mainMod` + F | Fullscreen |
 | `mainMod` + L | Lock screen (hyprlock) |
 | `mainMod` + X | Power menu (wlogout) |
+| `mainMod` + Shift + X | Second power menu, adi1090x/rofi style (`~/.config/hypr/scripts/rofi-powermenu.sh`), redundant with `mainMod`+X on purpose, for the different look |
 | `mainMod` + Shift + V | Clipboard history picker (cliphist + rofi) — see [clipboard.md](clipboard.md) |
-| `mainMod` + B | Wallpaper picker (waypaper, swww backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec) and [wallpaper.md](wallpaper.md) |
+| `mainMod` + B | Wallpaper picker (waypaper, swww backend) — bound to the full path `/home/user/.local/bin/waypaper`, see [config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind---exec) and [wallpaper.md](wallpaper.md) |
 | `mainMod` + K | Quicklinks picker (`~/.config/hypr/scripts/rofi-quicklinks.sh`) |
-| `mainMod` + Plus | Open a terminal (foot) running `cla` — an interactive picker that `cd`s into a project under `~/git` and execs `claude` there. Bound to the full path (`/home/user/.local/bin/cla`) for the same reason as `mainMod`+B, see [config-gotchas.md](config-gotchas.md#pathlocalbin-not-visible-to-bind--exec). The script itself lives in its own repo, [sisqo/utils](https://github.com/sisqo/utils) — cloned at `~/git/utils`, `bin/cla` symlinked into `~/.local/bin/cla` — not part of this repo and not copied here, same reasoning as the "no config copies" note in the README |
-| `mainMod` + È | Same as `mainMod`+Plus, but runs `cla2`: a full-screen, more flashy version of the same picker (git inspector, fuzzy search, mouse), in the same [sisqo/utils](https://github.com/sisqo/utils) repo, `bin/cla2` symlinked into `~/.local/bin/cla2`. The key is `egrave` in the bind, since the layout is `it` and `è` sits where `[` is on US. Full path for the same reason as `cla` |
+| `mainMod` + Plus | Open a terminal (foot) running `cla` — an interactive picker that `cd`s into a project under `~/git` and execs `claude` there. Bound to the full path (`/home/user/.local/bin/cla`) for the same reason as `mainMod`+B, see [config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind---exec). The script itself lives in its own repo, [sisqo/utils](https://github.com/sisqo/utils) — cloned at `~/git/utils`, `bin/cla` symlinked into `~/.local/bin/cla` — not part of this repo and not copied here, same reasoning as the "no config copies" note in the README |
+| `mainMod` + È | Same as `mainMod`+Plus, but runs `cla2`: a full-screen, more flashy version of the same picker (git inspector, fuzzy search, mouse), in the same [sisqo/utils](https://github.com/sisqo/utils) repo, `bin/cla2` symlinked into `~/.local/bin/cla2`. The key is `egrave` in the bind (`mainMod .. " + egrave"`), since the layout is `it` and `è` sits where `[` is on US. Full path for the same reason as `cla` |
 | Print | Screenshot a region (grim+slurp) to clipboard |
 | Shift + Print | Screenshot the full screen to clipboard |
 | `mainMod` + arrows | Move focus between windows |
@@ -148,12 +156,12 @@ Everything after `@theme` in `config.rasi` overrides the active style file
 `drun` mode (app launcher) and `-dmenu` mode (generic picker, used for the
 cliphist list) both use this one config — verified visually with `grim`
 screenshots for both. `wofi` is still installed (`1.4.1-1build2`) but
-nothing in `hyprland.conf` calls it anymore — it's an unused leftover from
+nothing in `hyprland.lua` calls it anymore — it's an unused leftover from
 before the switch to rofi, not a fallback in active use.
 
 ## Keyboard layout toggle: why Super+Space and not Alt+Shift
 
-`input { kb_layout = it,us; kb_options = grp:win_space_toggle }`.
+`input = { kb_layout = "it,us", kb_options = "grp:win_space_toggle" }`.
 
 The obvious choice, `grp:alt_shift_toggle`, was getting stolen by something
 below Hyprland on this VM before Hyprland's bind engine ever saw the keys —

@@ -31,8 +31,9 @@ few lines that matter and point to the real file.
   pinned. Also cross-link it from the topic doc it affects.
 - New or changed keybinds go in the table in `docs/shortcuts.md`. That table
   can drift from the real config. The source of truth is
-  `~/.config/hypr/hyprland.conf`, shown live by
-  `~/.config/hypr/scripts/shortcuts.sh`.
+  `~/.config/hypr/hyprland.lua`, shown live by
+  `~/.config/hypr/scripts/shortcuts.sh` (which reads each bind's `desc`, so
+  give every new `hl.bind` one).
 - Link between docs with relative links and heading anchors, e.g.
   `[setup.md](setup.md#installing-hyprland)`. If you rename a heading, fix
   the anchors that point to it.

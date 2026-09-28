@@ -50,12 +50,14 @@ Installed to `~/.cargo/bin/swww` and `~/.cargo/bin/swww-daemon`.
 
 `swww img` talks to `swww-daemon` over a socket named after the current
 Wayland display (see `common/src/ipc/socket.rs` in the swww source) that
-doesn't exist until the daemon has finished starting. Hyprland fires every
-`exec-once` line concurrently with no ordering guarantee, so a naive
+doesn't exist until the daemon has finished starting. Hyprland starts every
+autostart command concurrently with no ordering guarantee (`hl.exec_cmd`
+doesn't wait, and neither did `exec-once` before the Lua migration), so a
+naive
 
-```
-exec-once = swww-daemon
-exec-once = swww img /path/to/wallpaper.png
+```lua
+hl.exec_cmd("swww-daemon")
+hl.exec_cmd("swww img /path/to/wallpaper.png")
 ```
 
 races: the `img` call can reach the socket before the daemon has created
@@ -84,10 +86,11 @@ done
 /home/user/.cargo/bin/swww img "$wallpaper" --transition-type fade
 ```
 
-`hyprland.conf` launches this instead of `hyprpaper`:
+The `hyprland.start` handler in `hyprland.lua` launches this instead of
+`hyprpaper`:
 
-```
-exec-once = /home/user/.config/hypr/scripts/swww-init.sh
+```lua
+hl.exec_cmd("/home/user/.config/hypr/scripts/swww-init.sh")
 ```
 
 The default wallpaper argument doubles as the boot-time default; it's kept
@@ -99,8 +102,8 @@ this script's default is also updated.
 ## Same `~/.local/bin` PATH trap as waypaper itself, one layer deeper
 
 See
-[config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind--exec)
-for the base issue: Hyprland's `bind`/`exec-once` inherit a minimal system
+[config-gotchas.md](config-gotchas.md#localbin-not-visible-to-bind---exec)
+for the base issue: commands Hyprland runs from binds and autostart inherit a minimal system
 PATH that doesn't include `~/.local/bin`, which is why the wallpaper picker
 bind uses `waypaper`'s absolute path already.
 
@@ -113,8 +116,8 @@ is.
 
 Fixed by symlinking both binaries into `/usr/local/bin` (already on
 Hyprland's minimal PATH, confirmed in the base gotcha entry), rather than
-trying to inject `~/.cargo/bin` via an `env = PATH,...` line in
-`hyprland.conf`:
+trying to inject `~/.cargo/bin` via an `hl.env("PATH", ...)` line in
+`hyprland.lua`:
 
 ```
 sudo ln -sf /home/user/.cargo/bin/swww /usr/local/bin/swww
@@ -122,10 +125,10 @@ sudo ln -sf /home/user/.cargo/bin/swww-daemon /usr/local/bin/swww-daemon
 ```
 
 `~/.config/waypaper/config.ini` also has `backend = swww` now (was
-`hyprpaper`), and the picker bind in `hyprland.conf` matches:
+`hyprpaper`), and the picker bind in `hyprland.lua` matches:
 
-```
-bind = $mainMod, B, exec, /home/user/.local/bin/waypaper --folder /usr/share/backgrounds --backend swww
+```lua
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("/home/user/.local/bin/waypaper --folder /usr/share/backgrounds --backend swww"), { desc = "Cambia sfondo (waypaper)" })
 ```
 
 ## Wallpaper images
@@ -134,7 +137,7 @@ bind = $mainMod, B, exec, /home/user/.local/bin/waypaper --folder /usr/share/bac
 [config-gotchas.md](config-gotchas.md#apt-remove-on-the-wallpaper-package-cascades-into-gdm3-gnome-shell-and-ubuntu-desktop)
 for what removing the package that owned them actually did) — it's now a
 hand-picked set of dark/night-themed images, matching the Tokyo Night
-accent colors used elsewhere (`hyprland.conf` borders, waybar, mako — see
+accent colors used elsewhere (`hyprland.lua` borders, waybar, mako — see
 [waybar.md](waybar.md#style)). Not full clones of any source repo: each was
 opened and checked individually before copying, skipping OS/DE-logo
 wallpapers, images with a baked-in watermark or text overlay, low-resolution

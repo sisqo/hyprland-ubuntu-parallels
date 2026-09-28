@@ -2,7 +2,7 @@
 
 The GPU is virtual (virtio-gpu over virtio-pci, exposed via `virgl`), not a
 passthrough of a real GPU. The choices around monitor, cursor, and effects in
-`~/.config/hypr/hyprland.conf` are all direct consequences of that, not
+`~/.config/hypr/hyprland.lua` are all direct consequences of that, not
 aesthetic preferences.
 
 ## EDID disabled → no automatic dynamic resize
@@ -18,17 +18,22 @@ because of `kernel.dmesg_restrict`).
 The virtio-gpu driver here exposes `-edid`: no EDID means the guest never
 receives the "the Parallels window was resized to WxH" information from the
 host, so **prlcc can't auto-adapt the resolution** even though it's running.
-The monitor line in `hyprland.conf` is therefore static:
+The monitor entry in `hyprland.lua` is therefore static:
 
-```
-monitor = Virtual-1,4096x2160@60,auto,1.6
+```lua
+hl.monitor({
+    output   = "Virtual-1",
+    mode     = "4096x2160@60",
+    position = "auto",
+    scale    = "1.6",
+})
 ```
 
 `preferred` instead of an explicit mode would resolve to `1280x960` (the
 static default without EDID), not the real screen resolution — an easy trap
 to fall back into if the config is ever regenerated from scratch.
 
-`scale = 1.6` on `4096x2160` gives a logical resolution of 2560×1350, close
+Scale 1.6 on `4096x2160` gives a logical resolution of 2560×1350, close
 to the 2560×1440 of a "Retina-ish" external monitor (Studio Display) plugged
 into the host. It needs to be changed by hand if the host display changes.
 
@@ -45,10 +50,12 @@ into the host. It needs to be changed by hand if the host display changes.
    before blindly trusting the existing line.)
 2. Test live without touching the file:
    ```
-   hyprctl keyword monitor "Virtual-1,<WxH>@<Hz>,auto,<scale>"
+   hyprctl eval 'hl.monitor({ output = "Virtual-1", mode = "<WxH>@<Hz>", position = "auto", scale = "<scale>" })'
    ```
-3. If it looks good, make it permanent by editing the `monitor =` line in
-   `~/.config/hypr/hyprland.conf`, then:
+   (`hyprctl keyword monitor ...` no longer works under the Lua config: it
+   answers `keyword can't work with non-legacy parsers. Use eval.`)
+3. If it looks good, make it permanent by editing the `hl.monitor({...})`
+   entry in `~/.config/hypr/hyprland.lua`, then:
    ```
    hyprctl reload
    ```
@@ -63,12 +70,14 @@ and Hyprland then upscaled that buffer 1.6× for compositing — the result was
 blurry ("non sembra retina, è tutto sgranato") on top of already being
 undersized.
 
-Fixed in `hyprland.conf`:
+Fixed in `hyprland.lua`:
 
-```
-xwayland {
-    force_zero_scaling = true
-}
+```lua
+hl.config({
+    xwayland = {
+        force_zero_scaling = true,
+    },
+})
 ```
 
 This makes XWayland clients render 1:1 against physical pixels — sharp, but
@@ -90,27 +99,27 @@ size compensation.
 virtio-gpu here doesn't expose a hardware cursor plane
 (`hyprctl monitors all` → `hardwareCursorsInUse: false`). Without explicitly
 disabling hardware cursors, the pointer disappears or flickers. Fix in
-`hyprland.conf`:
+`hyprland.lua`, inside `hl.config({...})`:
 
-```
-cursor {
-    no_hardware_cursors = true
-    enable_hyprcursor = true
-}
+```lua
+cursor = {
+    no_hardware_cursors = true,
+    enable_hyprcursor   = true,
+},
 ```
 
 ## Blur and shadows disabled on purpose
 
 The virtual GPU tops out at OpenGL ES 3.0 (via virgl) with 2 vCPU behind it.
 Window blur and shadows are expensive on this stack and are explicitly kept
-off in `decoration { blur { enabled = false } shadow { enabled = false } }`,
+off in `decoration = { blur = { enabled = false }, shadow = { enabled = false } }`,
 and likewise `blur_passes = 0` on the background in `hyprlock.conf`. They're
 not "forgotten", they should only be turned back on if this moves to a setup
 with a real GPU.
 
 ## VRR and `vfr`
 
-`misc {}` has `vrr = 0`: variable refresh rate is meaningless on a virtual
+`misc = {...}` has `vrr = 0`: variable refresh rate is meaningless on a virtual
 monitor, so it's disabled explicitly. The comment above that line in the
 config also notes that the `vfr` option (a different setting from `vrr`) was
 renamed `debug:vfr` starting in 0.56 and is already enabled by default — so

@@ -24,10 +24,11 @@ ln -sfn "$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE" \
 exec waybar "$@"
 ```
 
-`hyprland.conf` launches this wrapper instead of `waybar` directly:
+The `hyprland.start` handler in `hyprland.lua` launches this wrapper instead
+of `waybar` directly:
 
-```
-exec-once = /home/user/.local/bin/waybar-hypr
+```lua
+hl.exec_cmd("/home/user/.local/bin/waybar-hypr")
 ```
 
 If waybar ever gets upgraded past 0.9.24 (or replaced by a build that reads
@@ -84,6 +85,11 @@ hyprpaper`) relies on.
 
 ## windowrule v2 vs v3
 
+This only concerns the legacy `hyprland.conf` format. The Lua config has a
+single form, `hl.window_rule({...})` (see
+[below](#conf-hyprlang-config-deprecated-in-056-removed-in-057)). Kept for
+anyone reading an old hyprlang config.
+
 In Hyprland 0.56.2, the old one-liner syntax:
 
 ```
@@ -109,7 +115,9 @@ windowrule {
 ```
 
 See [clipboard.md](clipboard.md#the-parallels-shared-clipboard-ghost-window)
-for the concrete rule this project uses this syntax for.
+for the concrete rule this project used this syntax for, and its Lua form
+today. The `snake_case` property names carried over unchanged to Lua
+(`no_anim = true`).
 
 ## Keyboard layout toggle intercepted before Hyprland sees it
 
@@ -124,7 +132,8 @@ fire. Worked around by using `grp:win_space_toggle` instead. Full context in
 ## `~/.local/bin` not visible to `bind = ..., exec`
 
 `mainMod`+B (wallpaper picker) silently did nothing when bound as plain
-`exec, waypaper`. Root cause: the session is started by GDM
+`exec, waypaper` (back when the config was `hyprland.conf`; the same holds
+for `hl.dsp.exec_cmd("waypaper")` in `hyprland.lua`). Root cause: the session is started by GDM
 (`Service=gdm-autologin`, `Type=wayland` in `loginctl show-session`), which
 never sources `~/.profile`/`~/.bashrc` — the files that normally put
 `~/.local/bin` on `PATH`. `waypaper` is installed via `pipx`
@@ -134,17 +143,19 @@ commands in, even though it resolves fine from an interactive shell.
 
 Fix: bind to the absolute path instead of relying on `PATH`:
 
-```
-bind = $mainMod, B, exec, /home/user/.local/bin/waypaper --folder /usr/share/backgrounds --backend hyprpaper
+```lua
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("/home/user/.local/bin/waypaper --folder /usr/share/backgrounds --backend swww"), { desc = "Cambia sfondo (waypaper)" })
 ```
 
+(the backend was `hyprpaper` at the time; see [wallpaper.md](wallpaper.md)).
+
 Same trap applies to any other pipx/pip-installed or otherwise
-`~/.local/bin`-only binary invoked from a `bind`/`exec-once` line — it'll
+`~/.local/bin`-only binary invoked from a bind or autostart command — it'll
 work when typed in a terminal and do nothing when triggered from a keybind,
 with no error visible anywhere obvious.
 
-Variant that bit `mainMod`+`+` (the `cla` project picker, `bind = $mainMod,
-plus, exec, foot /home/user/.local/bin/cla`): the *bound* command was already
+Variant that bit `mainMod`+`+` (the `cla` project picker, bound to
+`hl.dsp.exec_cmd("foot /home/user/.local/bin/cla")`): the *bound* command was already
 an absolute path, so `cla` itself started fine and its interactive menu
 showed up. The failure was one level deeper — after picking a project, `cla`
 did `exec claude --remote-control ...` using the bare command name. `claude`
@@ -328,7 +339,7 @@ Fix, two parts:
 ## `vfr` renamed to `debug:vfr`
 
 As of Hyprland 0.56, the `vfr` option lives under `debug:vfr` and is already
-on by default — noted in a comment in `misc {}` in `hyprland.conf` so nobody
+on by default — noted in a comment in `misc = {...}` in `hyprland.lua` so nobody
 adds a `vfr = 1` line thinking it's required. See
 [graphics.md](graphics.md#vrr-and-vfr) — this is unrelated to the separate
 `vrr = 0` setting on the same block, which is about the (irrelevant on a
@@ -362,3 +373,58 @@ because it only runs when the session itself was started with the Lua config
 
 Only `hyprland.conf` is affected. `hyprlock.conf`, `hypridle.conf` and
 `hyprpaper.conf` belong to separate tools and keep their own format.
+
+### How the migration went (2026-09-28)
+
+Converted one to one: same values, same comments. After logging back in, the
+log says `[cfg] Using lua config found at /home/user/.config/hypr/hyprland.lua`.
+Before logging out, the old session's state was dumped and then diffed
+against the new one: `hyprctl binds -j` (modmask and key), `hyprctl monitors
+-j`, a dozen `hyprctl getoption`, the autostart processes, and waybar's
+environment. Everything matched except the mouse-bind flag (see below). `getoption` only changes the type label
+(`int: 1` becomes `bool: true`, `custom type` becomes `gradient data` /
+`css gap data`). The old file is kept as `hyprland.conf.pre-lua`, which
+Hyprland ignores.
+
+The mapping, for anything added later:
+
+| `hyprland.conf` | `hyprland.lua` |
+|---|---|
+| `section { key = value }` | `hl.config({ section = { key = value } })` |
+| `monitor = Virtual-1,4096x2160@60,auto,1.6` | `hl.monitor({ output = "Virtual-1", mode = "4096x2160@60", position = "auto", scale = "1.6" })` |
+| `exec-once = cmd` | `hl.exec_cmd("cmd")` inside `hl.on("hyprland.start", function() ... end)` |
+| `env = K,V` | `hl.env("K", "V")` |
+| `bezier` / `animation =` | `hl.curve(...)` / `hl.animation({ leaf = ..., speed = ..., bezier = ..., style = ... })` |
+| `bind = $mainMod SHIFT, X, exec, cmd` | `hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("cmd"), { desc = "..." })` |
+| `killactive` / `togglefloating` / `fullscreen` | `hl.dsp.window.close()` / `hl.dsp.window.float({ action = "toggle" })` / `hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" })` |
+| `movefocus, l` / `workspace, N` / `movetoworkspace, N` | `hl.dsp.focus({ direction = "left" })` / `hl.dsp.focus({ workspace = N })` / `hl.dsp.window.move({ workspace = N })` |
+| `bindm = ..., mouse:272, movewindow` | `hl.bind("ALT + mouse:272", hl.dsp.window.drag(), { mouse = true })` |
+| `windowrule { name = ...; match:title = ... }` | `hl.window_rule({ name = ..., match = { title = ... }, ... })` |
+
+Traps found along the way:
+
+- **`hyprctl binds` no longer shows the action.** With Lua every bind is
+  reported as `"dispatcher": "__lua", "arg": "<id>"`, which broke
+  `scripts/shortcuts.sh` (it used to parse the `.conf`). Every bind now has
+  `desc = "..."` and the script shows that; see
+  [shortcuts.md](shortcuts.md#bindings-confighyprhyprlandlua).
+- **Bind options aren't validated.** `--verify-config` rejects bad dispatcher
+  arguments, but `hl.bind(..., { bogus = true })` still gives `config ok`. So
+  `config ok` doesn't prove the options do anything.
+- **The mouse binds report `mouse: false` and still work.** With
+  `{ mouse = true }` (the official example's form) `hyprctl binds -j` shows
+  `"mouse": false` for `mouse:272`/`mouse:273`, where the `.conf` `bindm` showed
+  `true`. ALT+left-drag moves and ALT+right-drag resizes anyway, tested by hand.
+  Don't "fix" it on the strength of that flag alone.
+- **Pass `action = "toggle"` explicitly.** The `.conf` `fullscreen` toggled.
+  In Lua `hl.dsp.window.fullscreen` takes `mode`/`action`, so they're spelled
+  out rather than trusting the default.
+- **`hyprctl keyword` is gone, use `hyprctl eval`.** Under the Lua config
+  `hyprctl keyword general:gaps_in 4` answers `keyword can't work with
+  non-legacy parsers. Use eval.`. The equivalent is
+  `hyprctl eval 'hl.config({ general = { gaps_in = 4 } })'` (checked, as was
+  `hl.monitor({...})` through `eval`). Earlier, `eval` refused to run under the
+  `.conf` session.
+- **`hyprctl reload` works for live changes** now that the session runs the Lua
+  config. It doesn't re-run the `hyprland.start` handler, so autostart
+  programs aren't doubled (checked with `pgrep`).

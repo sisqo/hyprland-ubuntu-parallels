@@ -32,11 +32,14 @@ wrapper script instead of directly, see
 - **network**: shows `essid` + signal for Wi-Fi, `ipaddr` for ethernet,
   `offline` when disconnected.
 - **custom/shortcuts**: click runs `~/.config/hypr/scripts/shortcuts.sh`,
-  which parses every `bind`/`bindm` line straight out of
-  `~/.config/hypr/hyprland.conf` (substituting `$mainMod`) and shows them in
-  a `rofi -dmenu` list. This is a live view generated from the actual config,
-  not a copy — if it and [shortcuts.md](shortcuts.md) ever disagree, the
-  script (and the config it reads) is the source of truth.
+  which reads the binds loaded right now from `hyprctl binds -j` (modmask
+  decoded to SHIFT/CTRL/ALT/SUPER, action taken from each bind's `desc`) and
+  shows them in a `rofi -dmenu` list. It reads Hyprland itself, not a config
+  file, so it works whatever the config format. If it and
+  [shortcuts.md](shortcuts.md) ever disagree, the script is the source of
+  truth. It used to parse the `bind =` lines out of `hyprland.conf` and was
+  rewritten for the Lua migration, see
+  [shortcuts.md](shortcuts.md#bindings-confighyprhyprlandlua).
 - **custom/power**: click runs `wlogout -b 4` — same power menu as
   `mainMod`+X (see [shortcuts.md](shortcuts.md)).
 
@@ -49,7 +52,7 @@ sans-serif` — the Nerd Font is a fallback after the two text fonts (see
 makes glyph icons available to add later without a font install first.
 
 Colors match the Tokyo Night palette used across the rest of the setup
-(`hyprland.conf` borders, `mako` notifications, `hyprlock`): background
+(`hyprland.lua` borders, `mako` notifications, `hyprlock`): background
 `#1a1b26` at 92% opacity, accent `#7aa2f7`, text `#c0caf5`/`#a9b1d6`, warning
 `#e0af68`, error/critical `#f7768e`, `custom/shortcuts` in green `#9ece6a`
 (hover `#b9f27c`). Active workspace pill and hover states

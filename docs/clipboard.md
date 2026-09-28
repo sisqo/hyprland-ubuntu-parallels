@@ -9,7 +9,7 @@ Two independent layers, easy to conflate because both use the word
 
 ## Layer 1: host↔guest clipboard (Parallels Tools)
 
-`prlcc` (`/usr/bin/prlcc`, started via `exec-once` in `hyprland.conf`)
+`prlcc` (`/usr/bin/prlcc`, started from the `hyprland.start` handler in `hyprland.lua`)
 provides clipboard sync between macOS and the VM, plus drag&drop and (in
 theory) dynamic resize — the resize part doesn't actually work here, see
 [graphics.md](graphics.md#edid-disabled--no-automatic-dynamic-resize).
@@ -23,45 +23,51 @@ window, it then hides itself, and the real window on screen appears to
 "jump" or reposition for an instant — confirmed with a real reproduction via
 `foot -T`, not just theory.
 
-Fix in `hyprland.conf`:
+Fix in `hyprland.lua`:
 
+```lua
+hl.window_rule({
+    name  = "parallelsClipboardGhost",
+    match = { title = "^(Parallels Shared Clipboard)$" },
+
+    float   = true,
+    size    = "1 1",
+    move    = "0 0",
+    no_anim = true,
+})
 ```
-windowrule {
-    name = parallelsClipboardGhost
-    match:title = ^(Parallels Shared Clipboard)$
-    float = 1
-    size = 1 1
-    move = 0 0
-    no_anim = 1
-}
-```
 
-The comment above this block in the live config explains the property choice
-as `no_initial_focus` rather than `no_focus` — not stealing focus without
-breaking clipboard sync. **Note:** the block as it actually stands does not
-include `no_initial_focus` (or any focus-related property) — only `float`,
-`size`, `move`, `no_anim`. Worth checking whether that line was dropped by
-accident or turned out to be unnecessary in practice; documented here as
-observed, not "fixed".
+The old `hyprland.conf` had a comment above this rule arguing for
+`no_initial_focus` rather than `no_focus`, so the window wouldn't steal focus
+without breaking clipboard sync. The rule itself never included
+`no_initial_focus` (or any focus-related property), only `float`, `size`,
+`move` and `no_anim`, and it works as is. That comment was dropped in the
+Lua migration (see
+[config-gotchas.md](config-gotchas.md#conf-hyprlang-config-deprecated-in-056-removed-in-057)).
+Re-checked after the migration with `foot -T "Parallels Shared Clipboard"`:
+`hyprctl clients -j` shows it `floating: true` at `[-9,-10]`, size `[19,21]`
+(foot doesn't go down to 1x1, which is fine: the point is that dwindle
+doesn't tile it).
 
-See [config-gotchas.md](config-gotchas.md#windowrule-v2-vs-v3) for why this
-rule uses the block syntax (`windowrule { ... }`) instead of the older
-`windowrulev2 = RULE,selector` one-liner.
+Before the Lua migration this rule was a `windowrule { ... }` block. See
+[config-gotchas.md](config-gotchas.md#windowrule-v2-vs-v3) for why the older
+`windowrulev2 = RULE,selector` one-liner didn't work.
 
 ## Layer 2: in-session clipboard history (wl-clipboard + cliphist)
 
-Two watchers feed a history database, started via `exec-once`:
+Two watchers feed a history database, started from the `hyprland.start`
+handler:
 
-```
-exec-once = wl-paste --type text --watch cliphist store
-exec-once = wl-paste --type image --watch cliphist store
+```lua
+hl.exec_cmd("wl-paste --type text --watch cliphist store")
+hl.exec_cmd("wl-paste --type image --watch cliphist store")
 ```
 
 `mainMod`+Shift+V opens a picker over that history and copies the chosen
 entry back onto the live clipboard:
 
-```
-bind = $mainMod SHIFT, V, exec, cliphist list | rofi -dmenu | cliphist decode | wl-copy
+```lua
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { desc = "Cronologia appunti" })
 ```
 
 (the picker is `rofi`, not `wofi` — see
@@ -73,9 +79,9 @@ clipboard entry.
 
 Screenshots also go through `wl-copy`:
 
-```
-bind = , Print, exec, grim -g "$(slurp)" - | wl-copy
-bind = SHIFT, Print, exec, grim - | wl-copy
+```lua
+hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | wl-copy'), { desc = "Screenshot area -> appunti" })
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd("grim - | wl-copy"), { desc = "Screenshot schermo -> appunti" })
 ```
 
 `grim`/`slurp` work directly here without a screenshot portal.
