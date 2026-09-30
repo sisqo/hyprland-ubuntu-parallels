@@ -29,7 +29,7 @@ file, line, or verifiable command.
 - [docs/waybar.md](docs/waybar.md) — top bar modules, layout, and styling
 - [docs/wallpaper.md](docs/wallpaper.md) — hyprpaper → swww migration, build-from-source install, curated wallpaper set
 - [docs/config-gotchas.md](docs/config-gotchas.md) — config syntax that changed across versions and silently broke something
-- [docs/dev-tools.md](docs/dev-tools.md) — VS Code (native Wayland via the Electron ozone hint), Database Client extension over SQLTools, local Redis, client-only PostgreSQL
+- [docs/dev-tools.md](docs/dev-tools.md) — VS Code (native Wayland via the Electron ozone hint), Database Client extension over SQLTools, local Redis (removed), client-only PostgreSQL
 - [docs/system.md](docs/system.md) — services removed or masked for a Parallels VM, single time source (`prltimesync`), earlyoom tuning, clock jumps after vCPU stalls and their cleanup
 
 All notes reference specific package versions: if you upgrade a component and

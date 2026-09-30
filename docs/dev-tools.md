@@ -58,21 +58,13 @@ fills the form → Connect → Save). Current targets:
 - **PostgreSQL**: remote, managed on Neon, `sslmode=require`. The connection
   string lives in the consuming project's environment, not in any file on
   this VM — take it from there or from the Neon dashboard.
-- **Redis**: local, `127.0.0.1:6379`, no password (see below).
 
-## Redis (local, Ubuntu package)
+## Redis: removed
 
-`redis-server` 7.0.15 (`5:7.0.15-1ubuntu0.24.04.4`, Ubuntu repo), enabled
-as a systemd service at boot. Listens on `127.0.0.1` and `::1` only, no
-`requirepass`:
-
-```
-ss -ltnp | grep 6379      # 127.0.0.1:6379 and [::1]:6379
-redis-cli ping            # PONG, no AUTH needed
-```
-
-Config is `/etc/redis/redis.conf`, not readable as the regular user, so
-anything beyond the two checks above needs `sudo`.
+A local `redis-server` 7.0.15 (Ubuntu package) used to run here, bound to
+`127.0.0.1:6379` with no password. On 2026-09-30 it was empty (`redis-cli
+dbsize` → `0`), so `redis-server` and `redis-tools` were purged. Don't
+reinstall it on a rebuild unless a project actually needs a local Redis.
 
 ## PostgreSQL: client only, no server
 
