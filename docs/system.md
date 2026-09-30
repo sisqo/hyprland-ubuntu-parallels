@@ -27,6 +27,39 @@ Two services were left alone on purpose, since there's nothing to gain:
   `/etc/default/qemu-kvm` it leaves `/sys/kernel/mm/ksm/run` at `0`, and the
   guest has no `/dev/kvm`.
 
+## Time sync: Parallels only
+
+Parallels Tools (27.0.2.58673, `/usr/lib/parallels-tools/version`) runs
+`prltimesync`, which keeps the guest clock in sync with the Mac.
+
+`ntp` was also installed by hand at some point. It is a transitional package
+that pulls in `ntpsec` 1.2.2, whereas Ubuntu's default would be
+`systemd-timesyncd`. The result was two agents correcting the same clock. On
+every boot, shortly after `prltimesync` had set the time, `ntpd` stepped the
+clock again by 0.19–0.49 s, in either direction:
+
+```
+journalctl | grep "CLOCK: time stepped"
+```
+
+On 2026-09-28 one of those negative steps made journald log
+`Time jumped backwards, rotating`.
+
+On 2026-09-30 `ntp`, `ntpsec` and `python3-ntp` were purged. `prltimesync`
+was kept because it is the one that fixes the clock after the host sleeps or
+stalls the VM (see [below](#clock-jumps-after-vcpu-stalls)). Don't install
+`systemd-timesyncd` or `chrony` alongside it, or you'll have the same two
+agents again.
+
+Expected side effect: `timedatectl` reports
+`System clock synchronized: no` / `NTP service: n/a`, because
+`prltimesync` doesn't set the kernel's NTP-sync flag. To check the real
+drift, compare `date -u` with an external clock:
+
+```
+curl -sI https://www.google.com | grep -i '^date:'
+```
+
 ## Clock jumps after vCPU stalls
 
 Twice the guest stopped getting CPU from the host, with memory nowhere near
