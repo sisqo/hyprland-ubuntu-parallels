@@ -60,6 +60,44 @@ drift, compare `date -u` with an external clock:
 curl -sI https://www.google.com | grep -i '^date:'
 ```
 
+## Out-of-memory: earlyoom
+
+The VM has 8 GB RAM and 8 GB of swap (`/swapfile`). Under a heavy dev load
+it fails by thrashing: the desktop freezes long before the kernel OOM killer
+fires.
+
+`systemd-oomd` (Ubuntu's default, still active) doesn't cover this case.
+`oomctl` shows no *Swap Monitored CGroups*, and the only pressure-monitored
+cgroup is `user@1001.service`. Hyprland and everything launched from it live
+in `session-2.scope` (`cat /proc/$(pgrep -x Hyprland)/cgroup`), outside that
+cgroup.
+
+`earlyoom` 1.7-2 (apt) is installed for this. It is configured in
+`/etc/default/earlyoom`:
+
+```
+EARLYOOM_ARGS="-r 3600 -m 10 -s 50 --prefer ^(node|next-server) --avoid ^(Hyprland|Xwayland|start-hyprland|waybar|foot|gdm.*|gnome-keyring-d|pipewire.*|wireplumber|dbus-.*|systemd.*|prl.*)$"
+```
+
+- **`-s 50`.** The stock free-swap threshold is 10%, which with 8 GB of swap
+  means acting only after about 7 GB have been swapped out, well into the
+  freeze. With `-s 50`, earlyoom sends SIGTERM when available RAM is ≤ 10%
+  **and** free swap is ≤ 50%. It sends SIGKILL at half of both.
+- **`--prefer ^(node|next-server)`.** A Next.js dev server is the usual
+  runaway process: `next-server` once reached 2.2 GB RSS. Process names are
+  matched against the 15-character `comm`, e.g. `next-server (v1`.
+- **`--avoid ...`** protects the compositor, the bar, the terminal, audio,
+  D-Bus and the Parallels Tools daemons.
+- **No quotes around the regexes.** The unit runs
+  `ExecStart=/usr/bin/earlyoom $EARLYOOM_ARGS`. systemd splits that value on
+  whitespace but doesn't strip quotes, so quotes would become part of the
+  regex. The regexes therefore must not contain spaces either.
+- **No `-p`.** The unit only grants `CAP_KILL CAP_IPC_LOCK`, so the renice
+  would just log an error.
+
+The thresholds actually in use are printed at startup:
+`journalctl -u earlyoom -b`.
+
 ## Clock jumps after vCPU stalls
 
 Twice the guest stopped getting CPU from the host, with memory nowhere near
