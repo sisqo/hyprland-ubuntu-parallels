@@ -79,7 +79,7 @@ cgroup.
 `/etc/default/earlyoom`:
 
 ```
-EARLYOOM_ARGS="-r 3600 -m 10 -s 50 --prefer ^(node|next-server) --avoid ^(Hyprland|Xwayland|start-hyprland|waybar|foot|gdm.*|gnome-keyring-d|pipewire.*|wireplumber|dbus-.*|systemd.*|prl.*)$"
+EARLYOOM_ARGS="-r 3600 -m 10 -s 50 --prefer ^(node|next-server) --avoid ^(Hyprland|Xwayland|start-hyprland|waybar|foot|gdm.*|gnome-keyring-d|pipewire.*|wireplumber|dbus-.*|systemd.*|prl.*|claude)$"
 ```
 
 - **`-s 50`.** The stock free-swap threshold is 10%, which with 8 GB of swap
@@ -92,7 +92,10 @@ EARLYOOM_ARGS="-r 3600 -m 10 -s 50 --prefer ^(node|next-server) --avoid ^(Hyprla
   it matches whether `comm` is `node` or a truncated title such as
   `next-server (v1`.
 - **`--avoid ...`** protects the compositor, the bar, the terminal, audio,
-  D-Bus and the Parallels Tools daemons.
+  D-Bus and the Parallels Tools daemons. It also protects Claude Code
+  sessions (`comm` is `claude`, ~430–500 MB RSS each): killing one loses the
+  whole session. Only the main process is protected; the shells and MCP
+  servers it spawns are not.
 - **No quotes around the regexes.** The unit runs
   `ExecStart=/usr/bin/earlyoom $EARLYOOM_ARGS`. systemd splits that value on
   whitespace but doesn't strip quotes, so quotes would become part of the
