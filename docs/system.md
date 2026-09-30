@@ -32,11 +32,11 @@ Two services were left alone on purpose, since there's nothing to gain:
 Parallels Tools (27.0.2.58673, `/usr/lib/parallels-tools/version`) runs
 `prltimesync`, which keeps the guest clock in sync with the Mac.
 
-`ntp` was also installed by hand at some point. It is a transitional package
-that pulls in `ntpsec` 1.2.2, whereas Ubuntu's default would be
-`systemd-timesyncd`. The result was two agents correcting the same clock. On
-every boot, shortly after `prltimesync` had set the time, `ntpd` stepped the
-clock again by 0.19–0.49 s, in either direction:
+`ntp` was also installed. It is a transitional package that pulls in
+`ntpsec` 1.2.2, whereas Ubuntu's default would be `systemd-timesyncd`. The
+remaining apt logs don't show when or why it was installed. The result was
+two agents correcting the same clock. On every boot `ntpd` stepped the clock
+by 0.19–0.49 s, in either direction:
 
 ```
 journalctl | grep "CLOCK: time stepped"
@@ -45,11 +45,14 @@ journalctl | grep "CLOCK: time stepped"
 On 2026-09-28 one of those negative steps made journald log
 `Time jumped backwards, rotating`.
 
-On 2026-09-30 `ntp`, `ntpsec` and `python3-ntp` were purged. `prltimesync`
-was kept because it is the one that fixes the clock after the host sleeps or
-stalls the VM (see [below](#clock-jumps-after-vcpu-stalls)). Don't install
-`systemd-timesyncd` or `chrony` alongside it, or you'll have the same two
-agents again.
+On 2026-09-30 `ntp`, `ntpsec` and `python3-ntp` were purged.
+`prltimesync` was kept for two reasons: it follows the Mac's clock, which
+macOS already keeps in sync, and ntpsec was the agent visibly stepping the
+clock at every boot. Neither agent was seen fixing the big jumps: on
+2026-09-15 nothing corrected the jump to 2121 before shutdown (see
+[below](#clock-jumps-after-vcpu-stalls)). Don't install `systemd-timesyncd`
+or `chrony` alongside `prltimesync`, or you'll have the same two agents
+again.
 
 Expected side effect: `timedatectl` reports
 `System clock synchronized: no` / `NTP service: n/a`, because
@@ -84,8 +87,10 @@ EARLYOOM_ARGS="-r 3600 -m 10 -s 50 --prefer ^(node|next-server) --avoid ^(Hyprla
   freeze. With `-s 50`, earlyoom sends SIGTERM when available RAM is ≤ 10%
   **and** free swap is ≤ 50%. It sends SIGKILL at half of both.
 - **`--prefer ^(node|next-server)`.** A Next.js dev server is the usual
-  runaway process: `next-server` once reached 2.2 GB RSS. Process names are
-  matched against the 15-character `comm`, e.g. `next-server (v1`.
+  runaway process: `next-server` once reached 2.2 GB RSS. earlyoom matches
+  the 15-character `comm`, and the regex is anchored only at the start, so
+  it matches whether `comm` is `node` or a truncated title such as
+  `next-server (v1`.
 - **`--avoid ...`** protects the compositor, the bar, the terminal, audio,
   D-Bus and the Parallels Tools daemons.
 - **No quotes around the regexes.** The unit runs
