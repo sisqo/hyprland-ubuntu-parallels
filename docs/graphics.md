@@ -56,20 +56,28 @@ the **first mode** in `/sys/class/drm/card1-Virtual-1/modes` (the
 windowed resize still doesn't work. The full-screen value does report the
 host display, though.
 
-`~/.config/hypr/scripts/monitor-auto.sh` is started from `hl.on("hyprland.start")`.
-It reads the preferred mode once at startup and again after each drm
-`change` event, then applies the matching setup with `hyprctl eval`:
+The choice is made in `~/.config/hypr/hyprland.lua` itself. Hyprland's Lua
+has `io.open`, so the config reads the preferred mode when it is parsed:
 
 - `3456x2168` → `3456x2168@59.98`, scale 2. The logical size is 1728×1084,
   the same as macOS's default "looks like" size on that panel.
-- `1280x960` → leaves the current setup alone (windowed, meaningless).
 - anything else → the external-monitor line, `4096x2160@60` at scale 1.6.
 
+`~/.config/hypr/scripts/monitor-auto.sh` is started from
+`hl.on("hyprland.start")`. It listens with `udevadm monitor` and runs
+`hyprctl reload` after each drm `change` event, unless the new preferred
+mode is `1280x960` (windowed). In that case it keeps the current setup.
+
+The first version applied the mode from the script with `hyprctl eval`. That
+broke on any config reload, including the automatic one when
+`hyprland.lua` is saved: the static `hl.monitor` line came back with no
+hotplug event, so nothing switched it again. Putting the decision in the
+config makes every reload correct.
+
 The external monitor's exact preferred value was not captured (it was not
-attached when the script was written). That is why the script uses a
-catch-all case for the external monitor instead of matching its value. The
-script waits 1 s after each event so that Hyprland has handled the hotplug
-before the script overrides it.
+attached when this was written), so the external setup is a catch-all
+`else` instead of a match on its value. The script waits 1 s after each
+event so that Hyprland has handled the hotplug before the reload.
 
 ### Procedure to change resolution by hand
 
