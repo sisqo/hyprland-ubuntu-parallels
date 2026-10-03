@@ -35,7 +35,41 @@ to fall back into if the config is ever regenerated from scratch.
 
 Scale 1.6 on `4096x2160` gives a logical resolution of 2560×1350, close
 to the 2560×1440 of a "Retina-ish" external monitor (Studio Display) plugged
-into the host. It needs to be changed by hand if the host display changes.
+into the host. That line is the default for the external monitor. On the
+MacBook's built-in display, a script switches it automatically (next section).
+
+### Automatic switch: MacBook display vs external monitor
+
+EDID is off, but the host's display still reaches the guest in another way.
+Every time Parallels changes state, a drm uevent with `HOTPLUG=1` fires, and
+the **first mode** in `/sys/class/drm/card1-Virtual-1/modes` (the
+"preferred" one) changes. This was checked with `udevadm monitor --kernel
+--subsystem-match=drm` while the window was toggled (Hyprland 0.56.2,
+2026-10-03):
+
+| Parallels state                      | first mode   |
+|--------------------------------------|--------------|
+| full screen on the MacBook Pro 16"   | `3456x2168`  |
+| windowed (any size)                  | `1280x960`   |
+
+`1280x960` is a fixed default. It does not report the real window size, so
+windowed resize still doesn't work. The full-screen value does report the
+host display, though.
+
+`~/.config/hypr/scripts/monitor-auto.sh` is started from `hl.on("hyprland.start")`.
+It reads the preferred mode once at startup and again after each drm
+`change` event, then applies the matching setup with `hyprctl eval`:
+
+- `3456x2168` → `3456x2168@59.98`, scale 2. The logical size is 1728×1084,
+  the same as macOS's default "looks like" size on that panel.
+- `1280x960` → leaves the current setup alone (windowed, meaningless).
+- anything else → the external-monitor line, `4096x2160@60` at scale 1.6.
+
+The external monitor's exact preferred value was not captured (it was not
+attached when the script was written). That is why the script uses a
+catch-all case for the external monitor instead of matching its value. The
+script waits 1 s after each event so that Hyprland has handled the hotplug
+before the script overrides it.
 
 ### Procedure to change resolution by hand
 
