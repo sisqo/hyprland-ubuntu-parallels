@@ -219,6 +219,41 @@ itself refuses to start) instead of silently no-op'ing like most of the
 other entries in this file — but the fix isn't obvious from the error text
 alone since it doesn't say which section is correct.
 
+## swaync and mako both claim the notification bus name
+
+mako (mako-notifier 1.8.0-2build2) is the notification daemon, started
+from `hyprland.lua` with `hl.exec_cmd("mako")`. But hyprland 0.56.2-1ppa1
+depends on `mako-notifier | sway-notification-center`, and
+`sway-notification-center` 0.9.0-1build2 is installed as well (auto). Its
+package enables `swaync.service` globally
+(`/etc/systemd/user/graphical-session.target.wants/swaync.service`).
+
+Both `swaync.service` and `/usr/lib/systemd/user/mako.service` declare
+`BusName=org.freedesktop.Notifications`. The user manager refuses the
+second one, and at every login the journal said:
+
+```
+Failed to put bus name to hashmap: File exists
+mako.service: Two services allocated for the same bus name org.freedesktop.Notifications, refusing operation.
+```
+
+`systemctl --user status mako` showed `Loaded: error ... File exists`.
+Notifications still worked, because the mako that actually runs is the one
+started by `exec_cmd`, not the unit. So this was only noise, but it hides
+real errors in `journalctl -p err`.
+
+Fix (2026-10-17): `systemctl --user mask swaync.service`. That creates a
+symlink to `/dev/null` in `~/.config/systemd/user/`, and `mako.service` now loads
+cleanly. `systemctl --user disable` doesn't work here, because the enable
+symlink is global (in `/etc`), not per-user. Don't `apt remove
+sway-notification-center` either: it is one side of a hyprland dependency,
+and apt removals on this VM have cascaded before (next section).
+
+`mako.service` itself is `enabled` but doesn't start, because
+`graphical-session.target` is never reached in this GDM-launched session.
+So there is no double mako. If that target ever becomes active, disable
+`mako.service` or drop the `exec_cmd`.
+
 ## `apt remove` on the wallpaper package cascades into gdm3, gnome-shell, and ubuntu-desktop
 
 While decluttering `/usr/share/backgrounds` (see
