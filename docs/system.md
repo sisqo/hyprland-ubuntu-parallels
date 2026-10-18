@@ -3,7 +3,7 @@
 The stock Ubuntu 24.04 install ships services meant for bare metal or for
 other hypervisors. This note covers what was removed or masked on this
 Parallels VM and why, plus the local tuning of the few services that matter
-here. Checked 2026-09-30.
+here. Checked 2026-09-30, extended 2026-10-17.
 
 ## Services removed or masked
 
@@ -13,19 +13,75 @@ here. Checked 2026-09-30.
 | `open-vm-tools` 13.0.10 | `apt purge` (+ `autoremove`) | VMware guest tools. They never start on Parallels, because their VMware virtualization condition isn't met. |
 | `modemmanager` 1.23.4 | `apt purge` | A VM has no modems (`mmcli -L`: "No modems were found"). |
 | `multipathd.service` + `.socket` (multipath-tools 0.9.4) | `systemctl disable --now`, then `mask` | Root is a plain `/dev/sda2` ext4, with no multipath storage. The package is **not purged**, because `apt purge multipath-tools` also removes the `ubuntu-server` and `ubuntu-server-minimal` metapackages. |
+| `gnome-remote-desktop.service` | `systemctl disable --now` | RDP/VNC server for GNOME. Unused: the VM is reached from the Parallels window. |
+| `kerneloops.service`, `whoopsie.path`, `apport.service`, `apport-autoreport.{path,timer}`, `apport-forward.socket` | `systemctl disable --now` | Crash reporting to Ubuntu. Nobody reads those reports for this VM. Disabling only `apport.service` isn't enough: the path, timer and socket units re-trigger it. |
+| `switcheroo-control.service` | `systemctl disable --now` | Switches between two GPUs. The VM has one (virtio-gpu). |
+| `fwupd-refresh.timer` + `fwupd.service` | timer `disable --now`, service `mask --now` | Firmware updates. A VM has no firmware to flash. `fwupd.service` is static and D-Bus-activated, so with only the timer disabled it still started (~40 MB RSS); hence the mask. |
+| `openvpn.service` | `systemctl disable --now` | Umbrella unit for `/etc/openvpn/*`. Both `client/` and `server/` are empty and NetworkManager has no VPN connection. |
+| `qemu-kvm.service` | `systemctl disable --now` | See below: it did nothing here. |
+| `sssd.service` + `sssd-*.socket` (7 sockets) | `systemctl disable --now` | Directory/LDAP login. Not used (local accounts only); the service was already inactive, but its sockets were listening. |
+| `lxd-installer.socket` | `systemctl disable --now` | Installs the LXD snap on first `lxc` call. Not wanted. |
+
+To revert any of these: `sudo systemctl unmask <unit>` (fwupd only) and
+`sudo systemctl enable --now <unit>`. No package was removed for them.
+
+Leftover config of removed packages (`dpkg -l` state `rc`, 65 packages: 57 from 19 old
+`linux-image`/`linux-modules[-extra]` 6.8.0-* kernels, plus `systemd-timesyncd`,
+`qrtr-tools`, `protection-domain-mapper`, `docutils-common`, `gtk-doc-tools`,
+`libdbus-1-dev`, `libjs-jquery`, `libmecab2`) was purged on 2026-10-17 with
+`dpkg --purge`.
 
 The apt CUPS stays because printing works through it. Parallels shares the
 Mac's printer: `prlshprint` listens on `127.0.0.1:30631`, and the queue in
 `/etc/cups/printers.conf` points at it
 (`DeviceURI ipp://localhost:30631/printers/...`).
 
-Two services were left alone on purpose, since there's nothing to gain:
+**cloud-init** is left alone on purpose: it is already disabled by the
+marker file `/etc/cloud/cloud-init.disabled` (`cloud-init status` →
+`disabled`).
 
-- **cloud-init** is already disabled by the marker file
-  `/etc/cloud/cloud-init.disabled` (`cloud-init status` → `disabled`).
-- **`qemu-kvm.service`** is a oneshot. With `KSM_ENABLED=AUTO` in
-  `/etc/default/qemu-kvm` it leaves `/sys/kernel/mm/ksm/run` at `0`, and the
-  guest has no `/dev/kvm`.
+**`qemu-kvm.service`** was first left alone too (2026-09-30), then disabled
+on 2026-10-17 for tidiness. It is a oneshot: with `KSM_ENABLED=AUTO` in
+`/etc/default/qemu-kvm` it leaves `/sys/kernel/mm/ksm/run` at `0`, and the
+guest has no `/dev/kvm`, so it never had anything to do.
+
+The notification daemon also needed one unit masked, for a different
+reason: see
+[config-gotchas.md](config-gotchas.md#swaync-and-mako-both-claim-the-notification-bus-name).
+
+## apt timers: not at boot
+
+Stock `apt-daily.timer` (`OnCalendar=*-*-* 6,18:00`) and
+`apt-daily-upgrade.timer` (`OnCalendar=*-*-* 6:00`) have `Persistent=true`.
+The VM is usually off at those times, so every boot ran the missed jobs
+right away: on the 2026-10-16 boot `systemd-analyze blame` showed
+`apt-daily-upgrade` 25 s and `apt-daily` 11 s, running alongside login on 2
+vCPU.
+
+Both timers have the same drop-in,
+`/etc/systemd/system/apt-daily{,-upgrade}.timer.d/override.conf`:
+
+```
+[Timer]
+Persistent=false
+OnBootSec=15min
+```
+
+`OnCalendar` stays as shipped. `OnBootSec=15min` keeps at least one run per
+boot, so unattended security upgrades still happen on a VM that is rarely on
+at 6:00, just not during login. Plain `Persistent=false` alone was rejected:
+it could skip updates for days. Check with `systemctl list-timers 'apt-daily*'`.
+
+### Boot time: plymouth isn't the bottleneck
+
+`systemd-analyze` reports `graphical.target reached after ~23 s`, and the
+critical chain blames `plymouth-quit-wait.service` (+21 s). That number is
+misleading: in `journalctl -b -o short-monotonic`, `gdm.service` starts at
+~7.1 s and the autologin session opens at ~7.3 s. The desktop is already
+usable by then; `plymouth-quit-wait` just keeps `graphical.target` pending
+until plymouth is told to quit. Removing `splash` from the kernel command line
+would only change that number, so `GRUB_CMDLINE_LINUX_DEFAULT` stays at
+`"quiet splash"`.
 
 ## Time sync: Parallels only
 
