@@ -74,7 +74,7 @@ configuration {
 	display-drun: "Apps";
 }
 * {
-    font: "Iosevka Nerd Font 20";
+    font: "Iosevka Nerd Font 25";
 }
 window {
     width: 32%;
@@ -145,6 +145,13 @@ Everything after `@theme` in `config.rasi` overrides the active style file
   `Iosevka Nerd Font 10`, now actually installed (see above) — 10pt is still
   too small for this monitor, for the same reason as below. 20 is a further
   manual bump on top of the scale-compensated 16, just for a bigger look.
+  It became 25 (`20 × 2 / 1.6`) when the monitor scale went from 1.6 to 2
+  on 2026-10-18 (see
+  [graphics.md](graphics.md#automatic-switch-macbook-display-vs-studio-display)),
+  so it looks the same size as before. The two rofi scripts
+  (`rofi-powermenu.sh`, `rofi-quicklinks.sh`) went from
+  `JetBrains Mono Nerd Font 18` to `22.5` in their `COMPENSATION` string
+  for the same reason.
 - `window { width: 32%; }`: the style's own default is `400px`. Same
   [XWayland-scale story as before](graphics.md#xwayland-apps-render-blurry-and-undersized-at-scale-16) —
   `px` gets silently shrunk (see

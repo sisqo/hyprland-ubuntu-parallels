@@ -137,11 +137,12 @@ for how `rofi` does it, and
 [config-gotchas.md](config-gotchas.md#rofi-absolute-width-silently-shrunk-by-a-0625-factor)
 for a DPI quirk that trips up the obvious fix.
 
-Those compensations were tuned at scale 1.6 on `4096x2160`. The scale is now
-2 (see [above](#automatic-switch-macbook-display-vs-studio-display)): `%`
-widths are still right, but `pt` fonts in rofi come out 20% smaller on the
-Studio Display (`4096 / 5120`) and larger on the MacBook. Not re-tuned as of
-2026-10-18.
+Those compensations were first tuned at scale 1.6 on `4096x2160`. When the
+scale went to 2 (see [above](#automatic-switch-macbook-display-vs-studio-display)),
+the `%` widths stayed right, but rofi's `pt` fonts came out 20% smaller
+(`1.6 / 2`). They were multiplied by 1.25 on 2026-10-18 and checked with a
+`grim` screenshot. Scale 2 is the same on the MacBook and the Studio
+Display, so one value fits both.
 
 `force_zero_scaling` is a session-wide XWayland setting, not per-app. As of
 2026-08-26, no other app on this VM uses XWayland (Chrome and `foot` both run
